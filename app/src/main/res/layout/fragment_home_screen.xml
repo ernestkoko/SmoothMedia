@@ -10,20 +10,58 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/songs_list_view"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginVertical="8dp"
+            app:layout_constraintBottom_toTopOf="@id/next_button"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginVertical="8dp"
-            android:layout_marginHorizontal="8dp"
-            tools:listitem="@layout/song_item"
+            app:layout_constraintVertical_bias="0.0"
             tools:itemCount="200"
 
-            />
+            tools:listitem="@layout/song_item" />
+
+        <ImageView
+            android:id="@+id/previous_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@android:drawable/screen_background_dark"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:onClick="@{()-> homeViewModel.previousSong()}"
+            app:srcCompat="@drawable/exo_ic_skip_previous" />
+
+        <ImageView
+            android:id="@+id/next_button"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="16dp"
+            android:background="@android:drawable/screen_background_dark"
+            app:layout_constraintBottom_toBottomOf="@+id/previous_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:onClick="@{()->homeViewModel.nextSong()}"
+            app:layout_constraintTop_toTopOf="@+id/previous_button"
+            app:srcCompat="@drawable/exo_controls_next" />
+
+        <ImageView
+            android:id="@+id/stop_play_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/previous_button"
+            app:layout_constraintEnd_toStartOf="@+id/next_button"
+            app:layout_constraintStart_toEndOf="@+id/previous_button"
+            android:onClick="@{()->homeViewModel.stopPlayBack()}"
+            android:background="@android:drawable/screen_background_dark"
+            app:layout_constraintTop_toTopOf="@+id/previous_button"
+            app:srcCompat="@drawable/exo_ic_pause_circle_filled" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

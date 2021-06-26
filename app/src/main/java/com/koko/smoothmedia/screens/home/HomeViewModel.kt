@@ -168,9 +168,30 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * [nextSong] selects the next song on the list if it exists
+     */
+   fun  nextSong(){
+       if(player!!.hasNext()){
+           player!!.next()
+       }
+
+
+    }
+
+    /**
+     * [previousSong] selects the previous songs on the list if it ecists
+     */
+    fun previousSong(){
+        if(player!!.hasPrevious()){
+            player!!.previous()
+        }
+    }
+
+    /**
      * function that stops the play back
      */
     fun stopPlayBack() {
+        player!!.stop()
 
     }
 
