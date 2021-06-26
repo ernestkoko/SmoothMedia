@@ -2,16 +2,22 @@ package com.koko.smoothmedia.screens.home
 
 import android.app.Application
 import android.content.ContentUris
+import android.media.browse.MediaBrowser
+
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
-import androidx.core.content.ContextCompat
+
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.MediaItem
+
+
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+
 import com.koko.smoothmedia.dataclass.SongData
 import kotlinx.coroutines.*
 import java.util.*
@@ -33,7 +39,8 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
 
     //Dispatchers.MAIN launches the coroutine on the main thread
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
-    private var player: SimpleExoPlayer = SimpleExoPlayer.Builder(app.applicationContext).build()
+    private var player: SimpleExoPlayer? = SimpleExoPlayer.Builder(app.applicationContext).build()
+    private lateinit var concatPlayer: ConcatenatingMediaSource
 
     fun launchQuerySongs(){
         uiScope.launch {
@@ -135,9 +142,28 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
      * a function that plays the song
      */
     fun playSong(uri: Uri) {
-        player.setMediaItem(MediaItem.fromUri(uri))
-        player.prepare()
-        player.play()
+        //remove every item on the player list
+        player!!.removeMediaItems(0, _songsList.value!!.size)
+        //declare a mutable list of MediaItem
+        val list = mutableListOf<MediaItem>()
+        //loop through [_sonsList] to get each song
+        for(song in _songsList.value!!){
+            /*
+             add the song to the first position on the list if the given uri is same as the
+             contentUri in the list else just add the song to the list
+             */
+            when(uri){
+
+                song.contentUri->list.add(0, MediaItem.fromUri(uri))
+                else ->list.add(MediaItem.fromUri(song.contentUri))
+            }
+        }
+        //give the list to the player
+        player!!.setMediaItems(list)
+        //prepare the player
+        player!!.prepare()
+        //play songs from the list, starting from the first position
+        player!!.play()
 
     }
 
@@ -164,22 +190,22 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
     }
 
 
-    /**
-     * cancel the Job
-     */
-    override fun onCleared() {
-        super.onCleared()
-        viewModelJob.cancel()
-    }
+
 
     /**
      * Triggers when an item(song) on the list is clicked
      */
     fun onSongClicked(it: SongData) {
-        //TODO
-        Log.i("HomeViewModel", "Song ID clicked: ${it.contentUri}")
         playSong(it.contentUri)
-
-
+    }
+    /**
+     * cancel the Job
+     */
+    override fun onCleared() {
+        super.onCleared()
+        //release the player
+        player!!.release()
+        player = null
+        viewModelJob.cancel()
     }
 }
