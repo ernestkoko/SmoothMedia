@@ -1,0 +1,2 @@
+rootProject.name = "SmoothMedia"
+include ':app'
