@@ -1,12 +1,12 @@
-package com.koko.smoothmedia.screens.home
+package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.koko.smoothmedia.databinding.SongItemBinding
+
 import com.koko.smoothmedia.dataclass.SongData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,10 +14,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * [SongAdapter] is the adapter for the recycler view
+ * [AudioFragmentRecyclerViewAdapter] is the adapter for the recycler view
  */
 
-class SongAdapter(val clickListener: OnClickListener) :
+class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
     ListAdapter<SongData, RecyclerView.ViewHolder>(SongDiffCallback()) {
     val adapterScope = CoroutineScope(Dispatchers.Default)
 

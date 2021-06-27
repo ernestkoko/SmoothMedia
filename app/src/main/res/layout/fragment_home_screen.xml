@@ -5,7 +5,7 @@
 <data>
     <variable
         name="homeViewModel"
-        type="com.koko.smoothmedia.screens.home.HomeViewModel" />
+        type="com.koko.smoothmedia.screens.audio.AudioFragmentViewModel" />
 </data>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

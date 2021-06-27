@@ -1,8 +1,7 @@
-package com.koko.smoothmedia.screens.home
+package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
 import android.app.Application
 import android.content.ContentUris
-import android.media.browse.MediaBrowser
 
 import android.net.Uri
 import android.os.Build
@@ -29,7 +28,7 @@ private const val TAG = "HomeScreen VM"
  * A view model class for the Home Screen
  */
 @Suppress("KDocUnresolvedReference")
-class HomeViewModel(val app: Application) : AndroidViewModel(app) {
+class AudioFragmentViewModel(val app: Application) : AndroidViewModel(app) {
     //list of songs
     private val _songsList = MutableLiveData<List<SongData>>()
     val songsList: LiveData<List<SongData>> get() = _songsList

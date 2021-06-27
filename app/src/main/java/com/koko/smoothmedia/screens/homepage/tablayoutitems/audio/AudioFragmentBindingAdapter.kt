@@ -1,6 +1,5 @@
-package com.koko.smoothmedia.screens.home
+package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
-import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.databinding.BindingAdapter

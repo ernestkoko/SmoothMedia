@@ -1,4 +1,4 @@
-package com.koko.smoothmedia.screens.home
+package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
 import android.Manifest
 import android.content.Context
@@ -24,17 +24,17 @@ import com.koko.smoothmedia.dataclass.SongData
 
 /**
  * A simple [Fragment] subclass.
- * Use the [HomeScreen] factory method to
+ * Use the [AudioFragment] factory method to
  * create an instance of this fragment.
  *
  */
 val permissions: Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 
-class HomeScreen : Fragment() {
+class AudioFragment : Fragment() {
     private lateinit var binding: FragmentHomeScreenBinding
     private val EXTERNAL_READ_PERMISSION_CODE = 11
-    private lateinit var homeViewModel: HomeViewModel
-    private lateinit var myAdapter: SongAdapter
+    private lateinit var mAudioFragmentViewModel: AudioFragmentViewModel
+    private lateinit var mMyAdapter: AudioFragmentRecyclerViewAdapter
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreateView(
@@ -48,12 +48,12 @@ class HomeScreen : Fragment() {
         //get the application
         val application = requireNotNull(this.activity).application
         //create the view model factory
-        val viewModelFactory = HomeViewModelFactory(application)
+        val viewModelFactory = AudioFragmentViewModelFactory(application)
         //create the view model
-        homeViewModel = ViewModelProvider(this, viewModelFactory).get(HomeViewModel::class.java)
+        mAudioFragmentViewModel = ViewModelProvider(this, viewModelFactory).get(AudioFragmentViewModel::class.java)
 
         //bind the view model
-        binding.homeViewModel = homeViewModel
+        binding.homeViewModel = mAudioFragmentViewModel
         //initialises the adapter
         initialiseAdapter()
 
@@ -72,19 +72,19 @@ class HomeScreen : Fragment() {
      */
     private fun initialiseAdapter() {
         //query for songs from view model
-        homeViewModel.launchQuerySongs()
+        mAudioFragmentViewModel.launchQuerySongs()
         //initialise the adapter
-        myAdapter = SongAdapter(
-            SongAdapter.OnClickListener {
-                homeViewModel.onSongClicked(it)
+        mMyAdapter = AudioFragmentRecyclerViewAdapter(
+            AudioFragmentRecyclerViewAdapter.OnClickListener {
+                mAudioFragmentViewModel.onSongClicked(it)
             }
         )
         //set the layout manager and adapter for the Recycler view
         binding.songsListView.layoutManager = LinearLayoutManager(context)
-        binding.songsListView.adapter = myAdapter
+        binding.songsListView.adapter = mMyAdapter
 
         //observe the list of songs, if it is not null submit the list to the adapter
-        homeViewModel.songsList.observe(viewLifecycleOwner, {
+        mAudioFragmentViewModel.songsList.observe(viewLifecycleOwner, {
             Log.i("HomeScreen:", "List: ${it}")
             it?.let {
                 submitSongsList(it)
@@ -129,7 +129,7 @@ class HomeScreen : Fragment() {
      */
     private fun submitSongsList(it: List<SongData>) {
 
-        myAdapter.submitSongsList(it)
+        mMyAdapter.submitSongsList(it)
     }
 
     /**

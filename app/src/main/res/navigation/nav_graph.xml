@@ -7,12 +7,12 @@
 
     <fragment
         android:id="@+id/homeScreen"
-        android:name="com.koko.smoothmedia.screens.home.HomeScreen"
+        android:name="com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragment"
         android:label="fragment_home_screen"
         tools:layout="@layout/fragment_home_screen" />
     <fragment
         android:id="@+id/homePage"
-        android:name="com.koko.smoothmedia.screens.homepage.HomePage"
+        android:name="com.koko.smoothmedia.screens.homepage.HomePageFragment"
         android:label="fragment_home_page"
         tools:layout="@layout/fragment_home_page" />
 </navigation>

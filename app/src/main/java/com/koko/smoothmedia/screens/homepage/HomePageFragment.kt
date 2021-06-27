@@ -13,10 +13,10 @@ import com.koko.smoothmedia.R
 import com.koko.smoothmedia.databinding.FragmentHomePageBinding
 
 
-class HomePage : Fragment() {
+class HomePageFragment : Fragment() {
     private lateinit var binding: FragmentHomePageBinding
     private lateinit var viewPager: ViewPager2
-    private lateinit var homePageAdapter: HomePageAdapter
+    private lateinit var mHomePageFragmentAdapter: HomePageFragmentAdapter
     private lateinit var tabLayout: TabLayout
 
     override fun onCreateView(
@@ -30,10 +30,10 @@ class HomePage : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        homePageAdapter = HomePageAdapter(this)
+        mHomePageFragmentAdapter = HomePageFragmentAdapter(this)
         viewPager = binding.viewPager
         tabLayout = binding.tabLayout
-        viewPager.adapter = homePageAdapter
+        viewPager.adapter = mHomePageFragmentAdapter
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
                 0 -> tab.text= "Songs"

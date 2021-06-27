@@ -11,7 +11,7 @@
 
         <variable
             name="clickListener"
-            type="com.koko.smoothmedia.screens.home.SongAdapter.OnClickListener" />
+            type="com.koko.smoothmedia.screens.audio.AudioFragmentRecyclerViewAdapter.OnClickListener" />
 
     </data>
 
