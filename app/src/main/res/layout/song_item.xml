@@ -11,7 +11,7 @@
 
         <variable
             name="clickListener"
-            type="com.koko.smoothmedia.screens.audio.AudioFragmentRecyclerViewAdapter.OnClickListener" />
+            type="com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragmentRecyclerViewAdapter.OnClickListener" />
 
     </data>
 
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="8dp"
-           android:textSize="12dp"
+            android:textSize="12dp"
             app:layout_constraintStart_toEndOf="@+id/imageView"
             app:layout_constraintTop_toTopOf="@+id/imageView"
             app:songTitle="@{song}" />

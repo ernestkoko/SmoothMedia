@@ -3,6 +3,7 @@ package com.koko.smoothmedia.screens.homepage
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragment
+import com.koko.smoothmedia.screens.homepage.tablayoutitems.video.VideoFragment
 
 /**
  * [HomePageFragmentAdapter] is an adapter that switches and creates views in the [HomePageFragment]
@@ -22,7 +23,7 @@ class HomePageFragmentAdapter(fragment: Fragment): FragmentStateAdapter(fragment
     override fun createFragment(position: Int): Fragment {
         return when(position){
             0-> AudioFragment()
-            else-> AudioFragment()
+            else-> VideoFragment.newInstance()
         }
     }
 }

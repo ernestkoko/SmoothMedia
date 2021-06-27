@@ -37,6 +37,7 @@ class HomePageFragment : Fragment() {
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
                 0 -> tab.text= "Songs"
+                1-> tab.text= "Videos"
                 else -> tab.text = "Position ${position + 1}"
             }
 
