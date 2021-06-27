@@ -169,39 +169,39 @@ class HomeScreen : Fragment() {
     /**
      * [onRequestPermissionsResult] gets fired when permission request result(s) is/are ready
      */
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-
-        Log.i(TAG, "Permission Request called")
-        when (requestCode) {
-            EXTERNAL_READ_PERMISSION_CODE -> {
-                if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
-                ) {
-                    Log.i(TAG, "Permission granted2")
-                    Log.i(TAG, "Permission granted2")
-//                    homeViewModel.launchQuerySongs()
-//                    myAdapter.submitSongsList(homeViewModel.songsList.value)
-//                    myAdapter.notifyDataSetChanged()
-
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Permission to get Audio denied",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-            else -> {
-
-
-            }
-
-        }
-    }
+//    override fun onRequestPermissionsResult(
+//        requestCode: Int,
+//        permissions: Array<out String>,
+//        grantResults: IntArray
+//    ) {
+//
+//        Log.i(TAG, "Permission Request called")
+//        when (requestCode) {
+//            EXTERNAL_READ_PERMISSION_CODE -> {
+//                if (grantResults.isNotEmpty() &&
+//                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+//                ) {
+//                    Log.i(TAG, "Permission granted2")
+//                    Log.i(TAG, "Permission granted2")
+////                    homeViewModel.launchQuerySongs()
+////                    myAdapter.submitSongsList(homeViewModel.songsList.value)
+////                    myAdapter.notifyDataSetChanged()
+//
+//                } else {
+//                    Toast.makeText(
+//                        requireContext(),
+//                        "Permission to get Audio denied",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//                }
+//            }
+//            else -> {
+//
+//
+//            }
+//
+//        }
+  //  }
 
 
 }

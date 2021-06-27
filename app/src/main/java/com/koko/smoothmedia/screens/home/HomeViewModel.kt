@@ -129,11 +129,11 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
                     val song = SongData(id, contentUri, title, dateAdded, displayName, duratn)
                     songs.add(song)
 
-                    Log.v(TAG, "Added song: $song")
+
                 }
 
             }
-            Log.v(TAG, "Added Songs Size: ${songs.size}")
+
         }
         _songsList.value = songs
     }
@@ -191,7 +191,9 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
      * function that stops the play back
      */
     fun stopPlayBack() {
-        player!!.stop()
+        if(player!!.isPlaying) {
+            player!!.stop()
+        }
 
     }
 
@@ -199,6 +201,9 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
      * function that pauses the playback
      */
     fun pausePlayBack() {
+        if(player!!.isPlaying) {
+            player!!.pause()
+        }
 
 
     }
@@ -207,6 +212,7 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
      * function that resumes that playback from the pause position
      */
     fun resumePlayBack() {
+        
 
     }
 
