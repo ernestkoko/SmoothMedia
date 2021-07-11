@@ -4,6 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/homePage">
+    <action android:id="@+id/action_global_audio_fragment"
+        app:destination="@id/homeScreen"
+        app:launchSingleTop="true"/>
 
     <fragment
         android:id="@+id/homeScreen"

@@ -2,9 +2,10 @@ package com.koko.smoothmedia.dataclass
 
 import android.net.Uri
 import androidx.recyclerview.widget.DiffUtil
+import androidx.versionedparcelable.VersionedParcelize
 import java.util.*
 
-
+@VersionedParcelize
 data class SongData(
     val id: Long,
     val contentUri: Uri,

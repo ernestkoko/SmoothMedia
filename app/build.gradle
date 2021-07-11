@@ -1,7 +1,9 @@
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+
 }
 
 android {
@@ -40,7 +42,7 @@ dependencies {
     implementation "androidx.multidex:multidex:$multidex_version"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.5.0'
+    implementation 'androidx.core:core-ktx:1.6.0'
     implementation 'androidx.appcompat:appcompat:1.3.0'
     //material design
     implementation "com.google.android.material:material:$material_design"
@@ -51,13 +53,16 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$navigation_version"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     //tests
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     //exoplayer
     implementation "com.google.android.exoplayer:exoplayer-core:$exo_player_version"
     implementation "com.google.android.exoplayer:exoplayer-dash:$exo_player_version"
     implementation "com.google.android.exoplayer:exoplayer-ui:$exo_player_version"
     //vew pager2
     implementation "androidx.viewpager2:viewpager2:$view_pager2_version"
+    //life cycle
+    implementation 'androidx.lifecycle:lifecycle-service:2.3.1'
+
 }

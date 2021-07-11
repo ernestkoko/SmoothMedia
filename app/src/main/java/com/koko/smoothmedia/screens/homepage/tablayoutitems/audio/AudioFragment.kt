@@ -1,10 +1,16 @@
 package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.koko.smoothmedia.R
 import com.koko.smoothmedia.databinding.FragmentHomeScreenBinding
 import com.koko.smoothmedia.dataclass.SongData
+//import com.koko.smoothmedia.services.AudioService
 
 
 /**
@@ -29,6 +36,7 @@ import com.koko.smoothmedia.dataclass.SongData
  *
  */
 val permissions: Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+const val AUDIO_CHANNEL_ID = "AUDIO_CHANNEL_ID"
 
 class AudioFragment : Fragment() {
     private lateinit var binding: FragmentHomeScreenBinding
@@ -50,7 +58,8 @@ class AudioFragment : Fragment() {
         //create the view model factory
         val viewModelFactory = AudioFragmentViewModelFactory(application)
         //create the view model
-        mAudioFragmentViewModel = ViewModelProvider(this, viewModelFactory).get(AudioFragmentViewModel::class.java)
+        mAudioFragmentViewModel =
+            ViewModelProvider(this, viewModelFactory).get(AudioFragmentViewModel::class.java)
 
         //bind the view model
         binding.homeViewModel = mAudioFragmentViewModel
@@ -58,13 +67,44 @@ class AudioFragment : Fragment() {
         initialiseAdapter()
 
 
-        //initialise the activity launcher for permission
-        requestPermissionLauncher = activityResultLauncher()
-        //checks for permission and request for it when not granted already
-        checkForPermission(requireContext())
+       checkForPermission(requireContext())
+
+        //todo
+//        mAudioFragmentViewModel.startService.observe(viewLifecycleOwner, {
+//            if(it){
+//                Intent(context, AudioService::class.java).also {
+//                    requireActivity().startService(it)
+//                }
+//            }
+//        })
 
         return binding.root
 
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+
+        registerForActivityResult()
+        //create notification channel
+        createNotificationChannel()
+    }
+
+    private fun registerForActivityResult() {
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {
+            if (it) {
+                Log.i(TAG, "RegisterForResult Permission: Granted")
+            } else {
+                Log.i(TAG, "RegisterForResult Permission: Not Granted")
+
+
+            }
+
+
+        }
     }
 
     /**
@@ -139,6 +179,7 @@ class AudioFragment : Fragment() {
     private fun checkForPermission(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             when {
+                //check if permission is granted already
                 ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.READ_EXTERNAL_STORAGE
@@ -148,20 +189,79 @@ class AudioFragment : Fragment() {
                     initialiseAdapter()
 
                 }
+                //show a reason to the user why permission is needed to be granted by the user
                 shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+                    Log.i(TAG, "Permission Show Reason to grant permission")
+
 
                     //display educational ui showing the reason permission is needed
                 }
+                //launch the permission dialog
                 else -> {
                     Log.i(TAG, "Permission Not granted1")
                     //directly ask for permission now
-                    requestPermissionLauncher.launch(
-
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                    )
+                    requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
             }
 
+        }
+    }
+
+    private fun isPermissionGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+            readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
+        }
+
+    }
+
+    private fun takePermission() {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.addCategory("android.intent.category.DEFAULT")
+                intent.setData(Uri.parse(String.format("package:%s", requireContext().packageName)))
+                // activity.startActivity()
+
+            } catch (error: Exception) {
+
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        Log.i(TAG, "onResume: Fired")
+        //demand for the permission to be granted again
+        // checkForPermission(requireContext())
+    }
+
+    /**
+     * [createNotificationChannel] creates notification channel that will be used for the foreground
+     * Service
+     */
+    private fun createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = ("Notification Test")
+            val descriptionText = ("Notification description")
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(AUDIO_CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                requireActivity().getSystemService(
+                    Context.NOTIFICATION_SERVICE
+                ) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 
@@ -201,7 +301,7 @@ class AudioFragment : Fragment() {
 //            }
 //
 //        }
-  //  }
+    //  }
 
 
 }
