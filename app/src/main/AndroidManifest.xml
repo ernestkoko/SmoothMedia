@@ -22,12 +22,17 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".services.AudioService"/>
+        <service android:name="com.koko.smoothmedia.mediasession.services.AudioService"
+            android:exported="false"
+            android:label="@string/audio_service_name">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService"/>
+            </intent-filter>
+
+        </service>
     </application>
 
 </manifest>

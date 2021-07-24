@@ -1,9 +1,6 @@
 package com.koko.smoothmedia
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
+
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
