@@ -3,23 +3,30 @@ package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
 import android.app.Application
 import android.content.ContentUris
+import android.database.Cursor
 import android.os.Build
 import android.provider.MediaStore
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaBrowserCompat.SubscriptionCallback
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.*
+import androidx.lifecycle.Observer
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
+import com.koko.smoothmedia.R
+import com.koko.smoothmedia.dataclass.MediaItemData
+import com.koko.smoothmedia.dataclass.Song
 import com.koko.smoothmedia.dataclass.SongData
-
+import com.koko.smoothmedia.mediasession.EMPTY_PLAYBACK_STATE
+import com.koko.smoothmedia.mediasession.NOTHING_PLAYING
+import com.koko.smoothmedia.mediasession.extension.id
+import com.koko.smoothmedia.mediasession.extension.isPlaying
+import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection
 import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -30,191 +37,189 @@ private const val TAG = "HomeScreen VM"
  * A view model class for the Home Screen
  */
 @Suppress("KDocUnresolvedReference")
-class AudioFragmentViewModel(val app: Application) : AndroidViewModel(app), Player.Listener {
+class AudioFragmentViewModel(
+    val app: Application,
+    musicServiceConnection: MusicServiceConnection
+) : AndroidViewModel(app) {
+
+    /**
+     * Use a backing property so consumers of mediaItems only get a [LiveData] instance so
+     * they don't inadvertently modify it.
+     */
+    private val _mediaItems = MutableLiveData<List<MediaItemData>>()
+    val mediaItems: LiveData<List<MediaItemData>> = _mediaItems
+   private val _songsListan = MutableLiveData<List<Song>>()
+    val songsListan : LiveData<List<Song>>
+    get() = _songsListan
+
+
+    private val subscriptionCallback = object : SubscriptionCallback() {
+        //called when there is error in loading the children
+        override fun onError(parentId: String) {
+            Log.i(TAG, "onError: $parentId")
+        }
+
+        //this returns the list of children from the media browser service compact
+        override fun onChildrenLoaded(
+            parentId: String,
+            children: List<MediaBrowserCompat.MediaItem>
+        ) {
+            Log.i(TAG, "List of Children: $children")
+            Log.i(TAG, "Parent Id: $parentId")
+
+            val lisChildren = children.map { child->
+
+                val description = child.description
+                Song(description.mediaId!!,description.mediaUri,description.title.toString())
+            }
+            Log.i(TAG, "List of Songs: ${lisChildren}")
+            _songsList.postValue(lisChildren)
+
+//            val itemsList = children.map { child ->
+//                val subtitle = child.description.subtitle ?: ""
+//
+//                Song(
+//
+//                )
+////                MediaItemData(
+////                    child.mediaId!!,
+////                    child.description.title.toString(),
+////                    subtitle.toString(),
+////                    child.description.iconUri!!,
+////                    child.isBrowsable,
+////                    getResourceForMediaId(child.mediaId!!)
+////                )
+//            }
+//            Log.i(TAG, "List of Items: $itemsList")
+//            _songsListan.postValue(itemsList)
+       }
+    }
+
+    /**
+     * When the session's [PlaybackStateCompat] changes, the [mediaItems] need to be updated
+     * so the correct [MediaItemData.playbackRes] is displayed on the active item.
+     * (i.e.: play/pause button or blank)
+     */
+    private val playbackStateObserver = Observer<PlaybackStateCompat> {
+        val playbackState = it ?: EMPTY_PLAYBACK_STATE
+        val metadata = musicServiceConnection.nowPlaying.value ?: NOTHING_PLAYING
+        if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
+            _mediaItems.postValue(updateState(playbackState, metadata))
+        }
+    }
+
+    /**
+     * When the session's [MediaMetadataCompat] changes, the [mediaItems] need to be updated
+     * as it means the currently active item has changed. As a result, the new, and potentially
+     * old item (if there was one), both need to have their [MediaItemData.playbackRes]
+     * changed. (i.e.: play/pause button or blank)
+     */
+    private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
+        val playbackState = musicServiceConnection.playbackState.value ?: EMPTY_PLAYBACK_STATE
+        val metadata = it ?: NOTHING_PLAYING
+        if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
+            _mediaItems.postValue(updateState(playbackState, metadata))
+        }
+    }
+
+    val rootMediaId: LiveData<String> =
+        Transformations.map(musicServiceConnection.isConnected) { isConnected ->
+            if (isConnected) {
+                musicServiceConnection.rootMedia
+
+            } else {
+                null
+            }
+        }
+
+    /**
+     * Because there's a complex dance between this [ViewModel] and the [MusicServiceConnection]
+     * (which is wrapping a [MediaBrowserCompat] object), the usual guidance of using
+     * [Transformations] doesn't quite work.
+     *
+     * Specifically there's three things that are watched that will cause the single piece of
+     * [LiveData] exposed from this class to be updated.
+     *
+     * [subscriptionCallback] (defined above) is called if/when the children of this
+     * ViewModel's [mediaId] changes.
+     *
+     * [MusicServiceConnection.playbackState] changes state based on the playback state of
+     * the player, which can change the [MediaItemData.playbackRes]s in the list.
+     *
+     * [MusicServiceConnection.nowPlaying] changes based on the item that's being played,
+     * which can also change the [MediaItemData.playbackRes]s in the list.
+     */
+    private val musicServiceConnection = musicServiceConnection.also {
+//        it.subscribe(musicServiceConnection.rootMedia, subscriptionCallback)
+        it.playbackState.observeForever(playbackStateObserver)
+        it.nowPlaying.observeForever(mediaMetadataObserver)
+    }
+
+    /**
+     * subscribe to the service
+     */
+    fun subscribe(parentId: String){
+        Log.i(TAG, "subscribe called: $parentId")
+        musicServiceConnection.subscribe(parentId, subscriptionCallback)
+
+    }
+
+
+    private fun getResourceForMediaId(mediaId: String): Int {
+        val isActive = mediaId == musicServiceConnection.nowPlaying.value?.id
+        val isPlaying = musicServiceConnection.playbackState.value?.isPlaying ?: false
+        return when {
+            !isActive -> NO_RES
+            isPlaying -> R.drawable.ic_pause_black_24dp
+            else -> R.drawable.ic_play_arrow_black_24dp
+        }
+    }
+
+    private fun updateState(
+        playbackState: PlaybackStateCompat,
+        mediaMetadata: MediaMetadataCompat
+    ): List<MediaItemData> {
+
+        val newResId = when (playbackState.isPlaying) {
+            true -> R.drawable.ic_pause_black_24dp
+            else -> R.drawable.ic_play_arrow_black_24dp
+        }
+
+        return mediaItems.value?.map {
+            val useResId = if (it.mediaId == mediaMetadata.id) newResId else NO_RES
+            it.copy(playbackRes = useResId)
+        } ?: emptyList()
+    }
+
+
+    ///my former code
+
     private var player: SimpleExoPlayer? = SimpleExoPlayer.Builder(app.applicationContext).build()
     private val mediaSession = MediaSessionCompat(app.applicationContext, TAG)
     private lateinit var mStateBuilder: PlaybackStateCompat.Builder
     private lateinit var concatPlayer: ConcatenatingMediaSource
 
     //list of songs
-    private val _songsList = MutableLiveData<List<SongData>>()
-    val songsList: LiveData<List<SongData>> get() = _songsList
+    private val _songsList = MutableLiveData<List<Song>>()
+    val songsList: LiveData<List<Song>> get() = _songsList
     private val _isPlayingSong = MutableLiveData<Boolean>()
     val isPlayingSong: LiveData<Boolean> get() = _isPlayingSong
 
-    //enable us to cancel coroutines
-    private var viewModelJob = Job()
-
-    //Dispatchers.MAIN launches the coroutine on the main thread
-    private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
 
-    fun launchQuerySongs() {
-
-        uiScope.launch {
-            queryAudio()
-        }
-    }
-
-    init {
-        initialiseMediaSession()
-        checkIfPlaying()
-    }
-
-    private fun checkIfPlaying() {
-        _isPlayingSong.value = player!!.isPlaying
-    }
-
-    //Query the songs
-    private suspend fun queryAudio() {
-        val songs = mutableListOf<SongData>()
-        //TODO display progress indicator
-        withContext(Dispatchers.IO) {
-            /**
-             * A key concept when working with Android [ContentProvider]s is something called
-             * "projections". A projection is the list of columns to request from the provider,
-             * and can be thought of (quite accurately) as the "SELECT ..." clause of a SQL
-             * statement.
-             *
-             * It's not _required_ to provide a projection. In this case, one could pass `null`
-             * in place of `projection` in the call to [ContentResolver.query], but requesting
-             * more data than is required has a performance impact.
-             *
-             * For this sample, we only use a few columns of data, and so we'll request just a
-             * subset of columns.
-             */
-            val projection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                arrayOf(
-
-                    MediaStore.Audio.Media._ID,
-                    MediaStore.Audio.Media.DISPLAY_NAME,
-                    MediaStore.Audio.Media.DATE_ADDED,
-                    MediaStore.Audio.Media.DURATION,
-                    MediaStore.Audio.Media.TITLE
-
-                )
-            } else {
-                arrayOf(
-                    MediaStore.Audio.Media._ID,
-                    MediaStore.Audio.Media.DISPLAY_NAME,
-                    MediaStore.Audio.Media.DATE_ADDED,
-                    MediaStore.Audio.Media.TITLE
-
-                )
-            }
-
-            getApplication<Application>().contentResolver.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                null, null, null, null
-            )?.use { cursor ->
-                /**
-                 * In order to retrieve the data from the [Cursor] that's returned, we need to
-                 * find which index matches each column that we're interested in.
-                 *
-                 * There are two ways to do this. The first is to use the method
-                 * [Cursor.getColumnIndex] which returns -1 if the column ID isn't found. This
-                 * is useful if the code is programmatically choosing which columns to request,
-                 * but would like to use a single method to parse them into objects.
-                 *
-                 * In our case, since we know exactly which columns we'd like, and we know
-                 * that they must be included (since they're all supported from API 1), we'll
-                 * use [Cursor.getColumnIndexOrThrow]. This method will throw an
-                 * [IllegalArgumentException] if the column named isn't found.
-                 *
-                 * In either case, while this method isn't slow, we'll want to cache the results
-                 * to avoid having to look them up for each row.
-                 */
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val dateModifiedColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
-                val displayNameColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
-                val duration = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-
-                val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-
-                Log.i(TAG, "Found ${cursor.count} images")
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    val displayName = cursor.getString(displayNameColumn)
-                    val dateAdded =
-                        Date(TimeUnit.SECONDS.toMillis(cursor.getLong(dateModifiedColumn)))
-                    val duratn = cursor.getLong(duration)
-                    val title = cursor.getString(titleColumn)
-
-                    val contentUri =
-                        ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
-                    val song = SongData(id, contentUri, title, dateAdded, displayName, duratn)
-                    songs.add(song)
 
 
-                }
-
-            }
-
-        }
-        //TODO end the  display progress indicator
-        _songsList.value = songs
-        //prepare the player
-        preparePlayer()
 
 
-    }
 
-    /**
-     * a function that plays the song
-     */
-    private fun preparePlayer() {
-        //remove every item on the player list
-        player!!.removeMediaItems(0, _songsList.value!!.size)
-        //declare a mutable list of MediaItem
-        val list = mutableListOf<MediaItem>()
-        //loop through [_songsList] to get each song
-        for (song in _songsList.value!!) {
-            /*
-             add the song to the first position on the list if the given uri is same as the
-             contentUri in the list else just add the song to the list.
-             */
-            list.add(MediaItem.fromUri(song.contentUri))
-        }
-        //give the list to the player
-        player!!.setMediaItems(list)
-        //prepare the player
-        player!!.prepare()
-        //play songs from the list, starting from the first position
-        // player!!.playWhenReady = true
-        player!!.addListener(this)
 
-        //startService(uri.toString())
-        mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, player!!.currentPosition, 1f)
 
-    }
-
-//    fun startService(uri: String) {
-//        intent.also {
-//            val bundle = Bundle()
-//
-//
-//
-//
-//            it.putExtra("bundle", uri)
-//           // app.startService(it)
-//        }
-//    }
-
-//    fun stopService() {
-//        intent.also {
-//            app.stopService(it)
-//        }
-//    }
 
     /**
      * [nextSong] selects the next song on the list if it exists
      */
     fun nextSong() {
-        if (player!!.hasNext()) {
-            player!!.next()
-        }
+
 
 
     }
@@ -223,93 +228,33 @@ class AudioFragmentViewModel(val app: Application) : AndroidViewModel(app), Play
      * [previousSong] selects the previous songs on the list if it ecists
      */
     fun previousSong() {
-        if (player!!.hasPrevious()) {
-            player!!.previous()
-        }
+
 
     }
 
     /**
      * function that stops the play back
      */
-    fun stopPlayBack() {
-        checkIfPlaying()
-        // stopService()
-        if (player!!.isPlaying) {
+    fun startStopPlayback() {
+        Log.i(TAG,"startStopPlayback: Called")
 
-            player!!.stop()
-        } else {
-            player!!.prepare()
-            player!!.playWhenReady = true
-            // player!!.play()
-        }
+
+        musicServiceConnection.transportControl.play()
 
     }
 
-    /**
-     * function that pauses the playback
-     */
-    fun pausePlayBack() {
-        if (player!!.isPlaying) {
-            player!!.pause()
-        }
 
 
-    }
-
-    /**
-     * function that resumes that playback from the pause position
-     */
-    fun resumePlayBack() {
-
-
-    }
 
 
     /**
      * Triggers when an item(song) on the list is clicked
      */
-    fun onSongClicked(it: SongData) {
-        //startService(it.contentUri.toString())
-//        preparePlayer(it.contentUri)
-        //check if the exact song to play is in the list, if present jump to the position of the song
-        //and play
-        for (song in _songsList.value!!) {
-            if (song == it) {
-                player!!.seekTo(_songsList.value!!.indexOf(song), C.TIME_UNSET)
-                if (!player!!.isPlaying) {
-                    player!!.let {
-                        it.prepare()
-                        it.playWhenReady = true
-                    }
-                }
-                return
-            }
-
-        }
-
-    }
-
-    private fun initialiseMediaSession() {
-        // Do not let MediaButtons restart the player when the app is not visible.
-        mediaSession.setMediaButtonReceiver(null)
-        // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
-
-        // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
-        mStateBuilder = PlaybackStateCompat.Builder()
-            .setActions(
-                PlaybackStateCompat.ACTION_PLAY or
-                        PlaybackStateCompat.ACTION_PAUSE or
-                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
-                        PlaybackStateCompat.ACTION_PLAY_PAUSE
-            )
-        mediaSession.setPlaybackState(mStateBuilder.build())
-        // MySessionCallback has methods that handle callbacks from a media controller.
-        mediaSession.setCallback(MySessionCallback())
-        mediaSession.isActive = true
+    fun onSongClicked(it: Song) {
 
 
     }
+
 
     /**
      * [onCleared] is called before the view model is destroyed
@@ -317,39 +262,41 @@ class AudioFragmentViewModel(val app: Application) : AndroidViewModel(app), Play
      */
     override fun onCleared() {
         super.onCleared()
-        //release the player
-        player!!.release()
-        player = null
-        viewModelJob.cancel()
+
+        // And then, finally, unsubscribe the media ID that was being watched.
+        //TODO
+        musicServiceConnection.unsubscribe(musicServiceConnection.rootMedia, subscriptionCallback)
+
+
     }
 
     /**
      * The below methods are called for listening to the Player
      */
-    override fun onTracksChanged(
-        trackGroups: TrackGroupArray,
-        trackSelections: TrackSelectionArray
-    ) {
-        Log.i(TAG, "onTracksChanged: Called")
-        Log.i(TAG, "onTracksChanged: ${trackSelections.all}")
-        super.onTracksChanged(trackGroups, trackSelections)
-    }
+//    override fun onTracksChanged(
+//        trackGroups: TrackGroupArray,
+//        trackSelections: TrackSelectionArray
+//    ) {
+//        Log.i(TAG, "onTracksChanged: Called")
+//        Log.i(TAG, "onTracksChanged: ${trackSelections.all}")
+//        super.onTracksChanged(trackGroups, trackSelections)
+//    }
 
-    override fun onEvents(player: Player, events: Player.Events) {
+//    override fun onEvents(player: Player, events: Player.Events) {
+//
+//        Log.i(TAG, "onEvents: Called ${events.javaClass.name}")
+//
+//
+//        super.onEvents(player, events)
+//    }
 
-        Log.i(TAG, "onEvents: Called ${events.javaClass.name}")
-
-
-        super.onEvents(player, events)
-    }
-
-    override fun onPlaybackStateChanged(state: Int) {
-        Log.i(TAG, "onPlaybackStateChanged: Called ..${state}")
-        Log.i(TAG, "onPlaybackStateChanged: Called ..${player!!.currentWindowIndex}")
-
-        super.onPlaybackStateChanged(state)
-
-    }
+//    override fun onPlaybackStateChanged(state: Int) {
+//        Log.i(TAG, "onPlaybackStateChanged: Called ..${state}")
+//        Log.i(TAG, "onPlaybackStateChanged: Called ..${player!!.currentWindowIndex}")
+//
+//        super.onPlaybackStateChanged(state)
+//
+//    }
 
 
     /**
@@ -378,4 +325,20 @@ class AudioFragmentViewModel(val app: Application) : AndroidViewModel(app), Play
             player!!.seekTo(0)
         }
     }
+
+    class Factory(
+        private val application: Application,
+        private val musicServiceConnection: MusicServiceConnection
+    ) :
+        ViewModelProvider.NewInstanceFactory() {
+        @Suppress("unchecked_cast")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(AudioFragmentViewModel::class.java)) {
+                return AudioFragmentViewModel(application, musicServiceConnection) as T
+            }
+            throw IllegalArgumentException("Unknown Model Class")
+        }
+    }
 }
+
+private const val NO_RES = 0

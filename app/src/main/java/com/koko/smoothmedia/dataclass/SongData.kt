@@ -13,7 +13,7 @@ data class SongData(
     val dateAdded: Date?,
     val displayName: String?,
     val duration: Long?,
-    val genre: String ?=null
+    val genre: String? = null
 ) {
     companion object {
         val DiffCallback = object : DiffUtil.ItemCallback<SongData>() {
@@ -29,3 +29,28 @@ data class SongData(
         }
     }
 }
+
+data class MediaItemData(
+    val mediaId: String,
+    val title: String,
+    val subtitle: String,
+    val albumArtUri: Uri,
+    val browsable: Boolean,
+    var playbackRes: Int
+)
+
+@VersionedParcelize
+data class Song(
+    val id: String = "",
+    val uri: Uri?=null,
+    val title: String = "",
+    val trackNumber: Long = -1,
+    val year: Long = -1,
+    val duration: Long = -1,
+    val data: String = "",
+    val dateModified: Long = -1,
+    val albumId: Long = -1,
+    val albumName: String = "",
+    val artistId: Long = -1,
+    val artistName: String = ""
+)

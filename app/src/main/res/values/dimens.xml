@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="media_item_negative_half_radius">5</dimen>
+    <dimen name="media_item_half_radius">5</dimen>
+    <dimen name="media_item_radius">5</dimen>
+</resources>

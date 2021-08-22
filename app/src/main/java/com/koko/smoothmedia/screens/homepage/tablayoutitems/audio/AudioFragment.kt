@@ -3,6 +3,7 @@ package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -21,11 +22,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.koko.smoothmedia.R
 import com.koko.smoothmedia.databinding.FragmentHomeScreenBinding
+import com.koko.smoothmedia.dataclass.Song
 import com.koko.smoothmedia.dataclass.SongData
+import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection
+import com.koko.smoothmedia.mediasession.services.AudioService
+import com.koko.smoothmedia.utils.InjectorUtils
+
 //import com.koko.smoothmedia.mediasession.services.AudioService
 
 
@@ -41,9 +49,12 @@ const val AUDIO_CHANNEL_ID = "AUDIO_CHANNEL_ID"
 class AudioFragment : Fragment() {
     private lateinit var binding: FragmentHomeScreenBinding
     private val EXTERNAL_READ_PERMISSION_CODE = 11
-    private lateinit var mAudioFragmentViewModel: AudioFragmentViewModel
+   // private lateinit var mAudioFragmentViewModel: AudioFragmentViewModel
     private lateinit var mMyAdapter: AudioFragmentRecyclerViewAdapter
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private  val viewModel by viewModels<AudioFragmentViewModel> {
+        InjectorUtils.provideAudioFragmentViewModel(requireActivity().application)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,33 +64,31 @@ class AudioFragment : Fragment() {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home_screen, container, false)
         binding.lifecycleOwner = this
 
-        //get the application
-        val application = requireNotNull(this.activity).application
-        //create the view model factory
-        val viewModelFactory = AudioFragmentViewModelFactory(application)
-        //create the view model
-        mAudioFragmentViewModel =
-            ViewModelProvider(this, viewModelFactory).get(AudioFragmentViewModel::class.java)
 
-        //bind the view model
-        binding.homeViewModel = mAudioFragmentViewModel
+        binding.homeViewModel = viewModel
         //initialises the adapter
         initialiseAdapter()
 
 
-       checkForPermission(requireContext())
+        checkForPermission(requireContext())
 
-        //todo
-//        mAudioFragmentViewModel.startService.observe(viewLifecycleOwner, {
-//            if(it){
-//                Intent(context, AudioService::class.java).also {
-//                    requireActivity().startService(it)
-//                }
-//            }
-//        })
+  viewModel.rootMediaId.observe(viewLifecycleOwner, {rootMediaId ->
+      rootMediaId?.let {
+          Log.i(TAG, "$rootMediaId: RootMediaId")
+          viewModel.subscribe(rootMediaId)
+      }
+
+  })
 
         return binding.root
 
+    }
+
+    private fun provideMusicServiceConnection(context: Context): MusicServiceConnection {
+        return MusicServiceConnection.getInstance(
+            context,
+            ComponentName(context, AudioService::class.java)
+        )
     }
 
     override fun onAttach(context: Context) {
@@ -111,20 +120,18 @@ class AudioFragment : Fragment() {
      * initialises the adapter and assigns the manager and adapter to to the view
      */
     private fun initialiseAdapter() {
-        //query for songs from view model
-        mAudioFragmentViewModel.launchQuerySongs()
+
         //initialise the adapter
         mMyAdapter = AudioFragmentRecyclerViewAdapter(
             AudioFragmentRecyclerViewAdapter.OnClickListener {
-                mAudioFragmentViewModel.onSongClicked(it)
+                viewModel.onSongClicked(it)
             }
         )
         //set the layout manager and adapter for the Recycler view
         binding.songsListView.layoutManager = LinearLayoutManager(context)
         binding.songsListView.adapter = mMyAdapter
-
         //observe the list of songs, if it is not null submit the list to the adapter
-        mAudioFragmentViewModel.songsList.observe(viewLifecycleOwner, {
+        viewModel.songsList.observe(viewLifecycleOwner, {
             Log.i("HomeScreen:", "List: ${it}")
             it?.let {
                 submitSongsList(it)
@@ -167,7 +174,7 @@ class AudioFragment : Fragment() {
     /**
      * [submitSongsList] submits the list to the recycler view adapter
      */
-    private fun submitSongsList(it: List<SongData>) {
+    private fun submitSongsList(it: List<Song>) {
 
         mMyAdapter.submitSongsList(it)
     }

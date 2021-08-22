@@ -57,7 +57,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/previous_button"
             app:layout_constraintEnd_toStartOf="@+id/next_button"
             app:layout_constraintStart_toEndOf="@+id/previous_button"
-            android:onClick="@{()->homeViewModel.stopPlayBack()}"
+            android:onClick="@{()->homeViewModel.startStopPlayback()}"
             android:background="@android:drawable/screen_background_dark"
             app:layout_constraintTop_toTopOf="@+id/previous_button"
             app:srcCompat="@drawable/exo_ic_pause_circle_filled" />

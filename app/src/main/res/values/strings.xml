@@ -1,4 +1,8 @@
 <resources>
+    <!-- Notificaiton Channel -->
+    <string name="notification_channel">Now Playing</string>
+    <string name="notification_channel_description">Shows what music is currently playing in UAMP</string>
+
     <!-- AUDIO SERVICE -->
     <string name="audio_service_name">audio_service_name</string>
     <string name="app_name">SmoothMedia</string>
@@ -7,4 +11,7 @@
     <string name="song_photo">Song photo</string>
     <string name="song_title">Song title</string>
     <string name="album_title">Album title</string>
+    <!-- Browse Tree -->
+    <string name="recommended_title">Recommended</string>
+    <string name="albums_title">Albums</string>
 </resources>

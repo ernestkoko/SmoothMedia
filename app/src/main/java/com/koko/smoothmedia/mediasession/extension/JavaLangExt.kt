@@ -1,6 +1,8 @@
 package com.koko.smoothmedia.mediasession.extension
 
 import android.net.Uri
+import java.net.URLEncoder
+import java.nio.charset.Charset
 import java.util.*
 
 /**
@@ -16,6 +18,18 @@ fun String?.containsCaseInsensitive(other: String?) =
         lowercase(Locale.getDefault()).contains(other.lowercase(Locale.getDefault()))
     } else {
         this == other
+    }
+
+/**
+ * Helper extension to URL encode a [String]. Returns an empty string when called on null.
+ */
+inline val String?.urlEncoded: String
+    get() = if (Charset.isSupported("UTF-8")) {
+        URLEncoder.encode(this ?: "", "UTF-8")
+    } else {
+        // If UTF-8 is not supported, use the default charset.
+        @Suppress("deprecation")
+        URLEncoder.encode(this ?: "")
     }
 /**
  * Helper extension to convert a potentially null [String] to a [Uri] falling back to [Uri.EMPTY]

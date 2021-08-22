@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.koko.smoothmedia.databinding.SongItemBinding
+import com.koko.smoothmedia.dataclass.Song
 
 import com.koko.smoothmedia.dataclass.SongData
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +19,7 @@ import kotlinx.coroutines.withContext
  */
 
 class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
-    ListAdapter<SongData, RecyclerView.ViewHolder>(SongDiffCallback()) {
+    ListAdapter<Song, RecyclerView.ViewHolder>(SongDiffCallback()) {
     val adapterScope = CoroutineScope(Dispatchers.Default)
 
     /**
@@ -48,7 +49,7 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
      * [submitSongsList] is a method that takes a list of songs[list] to be given to the
      * [ListAdapter]
      */
-    fun submitSongsList(list: List<SongData>?) {
+    fun submitSongsList(list: List<Song>?) {
         adapterScope.launch {
             val items = when (list) {
                 null -> null
@@ -72,8 +73,8 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
          *  to the click listener in the binding object and then executes any pending bindings
          *
          */
-        fun bind(songData: SongData, clickListener: OnClickListener) {
-            binding.song = songData
+        fun bind(song: Song, clickListener: OnClickListener) {
+            binding.song = song
             binding.clickListener = clickListener
             binding.executePendingBindings()
 
@@ -97,20 +98,20 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
      * [OnClickListener] is a class that has a call back [clickListener] that will be triggered
      * when an item(song) is clicked in the recycler view
      */
-    class OnClickListener(val clickListener: (song: SongData) -> Unit) {
-        fun onClick(song: SongData) = clickListener(song)
+    class OnClickListener(val clickListener: (song: Song) -> Unit) {
+        fun onClick(song: Song) = clickListener(song)
     }
 }
 
 /**
  * [SongDiffCallback] is a class that checks if a song has changed in any form on the list
  */
-class SongDiffCallback : DiffUtil.ItemCallback<SongData>() {
-    override fun areItemsTheSame(oldItem: SongData, newItem: SongData): Boolean {
+class SongDiffCallback : DiffUtil.ItemCallback<Song>() {
+    override fun areItemsTheSame(oldItem: Song, newItem: Song): Boolean {
         return oldItem === newItem
     }
 
-    override fun areContentsTheSame(oldItem: SongData, newItem: SongData): Boolean {
+    override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean {
         return oldItem.title == newItem.title
     }
 
