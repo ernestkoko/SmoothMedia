@@ -37,13 +37,17 @@ class InbuiltMusicSource : AbstractMusicSource() {
                 return@withContext null
             }
 
+            //Get the list of the MediaMetaDataCompact
             val mediaMetadataCompacts = musciCat.map {
                 MediaMetadataCompat.Builder().from(it).build()
 
             }.toList()
+
+            //Bundle the list
             mediaMetadataCompacts.forEach {
                 it.description.extras?.putAll(it.bundle)
             }
+            //Return the list
             mediaMetadataCompacts
 
 

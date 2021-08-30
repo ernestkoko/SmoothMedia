@@ -1,6 +1,6 @@
 package com.koko.smoothmedia.mediasession.services
 
-import android.app.NotificationManager
+
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
@@ -29,42 +29,44 @@ class SmoothNotificationManager(
     notificationListener: PlayerNotificationManager.NotificationListener
 ) {
 
-    private var player: Player? = null
+
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
     private val notificationManager: PlayerNotificationManager
-    private val platformNotificationManager: NotificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
 
     init {
         val mediaController = MediaControllerCompat(context, sessionToken)
 
-        notificationManager = PlayerNotificationManager.createWithNotificationChannel(
+
+        notificationManager = PlayerNotificationManager.Builder(
             context,
-            NOW_PLAYING_CHANNEL_ID,
-            R.string.notification_channel,
-            R.string.notification_channel_description,
             NOW_PLAYING_NOTIFICATION_ID,
-            DescriptionAdapter(mediaController),
-            notificationListener
+            NOW_PLAYING_CHANNEL_ID,
         ).apply {
+            setSmallIconResourceId(R.drawable.ic_snotification)
+            setNotificationListener(notificationListener)
+            setMediaDescriptionAdapter(DescriptionAdapter(mediaController))
 
-            setMediaSessionToken(sessionToken)
-            setSmallIcon(R.drawable.exo_notification_small_icon)
+
+        }.build()
+        notificationManager.setUseFastForwardAction(false)
+        notificationManager.setUseRewindAction(false)
+        notificationManager.setUseChronometer(true)
+        notificationManager.setUsePreviousActionInCompactView(true)
+        notificationManager.setUseNextActionInCompactView(true)
+        notificationManager.setMediaSessionToken(sessionToken)
 
 
-            // Don't display the rewind or fast-forward buttons.
-            setRewindIncrementMs(0)
-            setFastForwardIncrementMs(0)
-        }
     }
 
     fun hideNotification() {
         notificationManager.setPlayer(null)
     }
 
-    fun showNotificationForPlayer(player: Player){
+    fun showNotificationForPlayer(player: Player) {
         notificationManager.setPlayer(player)
+
     }
 
     private inner class DescriptionAdapter(private val controller: MediaControllerCompat) :
@@ -72,6 +74,7 @@ class SmoothNotificationManager(
 
         var currentIconUri: Uri? = null
         var currentBitmap: Bitmap? = null
+
 
         override fun createCurrentContentIntent(player: Player): PendingIntent? =
             controller.sessionActivity

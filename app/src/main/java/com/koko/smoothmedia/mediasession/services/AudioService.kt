@@ -1,11 +1,8 @@
 package com.koko.smoothmedia.mediasession.services
 
 import android.app.*
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
@@ -15,7 +12,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
@@ -26,16 +22,10 @@ import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
-import com.koko.smoothmedia.MainActivity
-import com.koko.smoothmedia.R
 import com.koko.smoothmedia.mediasession.extension.*
 import com.koko.smoothmedia.mediasession.library.BrowseTree
 import com.koko.smoothmedia.mediasession.library.InbuiltMusicSource
 import com.koko.smoothmedia.mediasession.library.MusicSource
-import com.koko.smoothmedia.other.Constants.ACTION_SHOW_AUDIO_FRAGMENT
-import com.koko.smoothmedia.other.Constants.NOTIFICATION_CHANNEL_ID
-import com.koko.smoothmedia.other.Constants.NOTIFICATION_CHANNEL_NAME
-import com.koko.smoothmedia.other.Constants.NOTIFICATION_ID
 import kotlinx.coroutines.*
 
 /**
@@ -51,17 +41,22 @@ import kotlinx.coroutines.*
  */
 class AudioService : MediaBrowserServiceCompat() {
     val TAG = "AudiService"
-    private lateinit var currentPlayer: Player
+    //private lateinit var currentPlayer: Player
 
     // private lateinit var mediaSource: MusicSource
     private lateinit var notificationManager: SmoothNotificationManager
+
+    //
+    private lateinit var notificationBuilder: NotificationCompat.Builder
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
     protected lateinit var mediaSession: MediaSessionCompat
     protected lateinit var mediaSessionConnector: MediaSessionConnector
-    private lateinit var stateBuilder: PlaybackStateCompat.Builder
+
+    //private lateinit var stateBuilder: PlaybackStateCompat.Builder
     private var currentPlaylistItems: List<MediaMetadataCompat> = emptyList()
     private lateinit var mediaSource: MusicSource
+    private lateinit var storage: PersistentStorage
 
     private val smoothMediaAudioAttributes = AudioAttributes.Builder()
         .setContentType(C.CONTENT_TYPE_MUSIC)
@@ -99,7 +94,10 @@ class AudioService : MediaBrowserServiceCompat() {
         }
     }
 
-
+    /**
+     * Initialise the MediaSession and set up the player[exoPlayer].
+     * Register the Notification manager
+     */
     override fun onCreate() {
         super.onCreate()
         // Build a PendingIntent that can be used to launch the UI.
@@ -113,12 +111,10 @@ class AudioService : MediaBrowserServiceCompat() {
         //setup player
         setupPlayer(exoPlayer)
 
-        //notification listener
-        notificationManager = SmoothNotificationManager(this, mediaSession.sessionToken,
-        PlayerNotificationListener())
 
-
+        //initialise the media source
         mediaSource = InbuiltMusicSource()
+
         //load the songs
         serviceScope.launch {
             mediaSource.load(applicationContext)
@@ -136,44 +132,52 @@ class AudioService : MediaBrowserServiceCompat() {
             mediaSession.sessionToken,
             PlayerNotificationListener()
         )
+        storage = PersistentStorage.getInstance(applicationContext)
 
 
     }
 
+    /**
+     * Set up the player and load the list of songs[MediaMetadataCompat]s onto the player
+     */
     private fun setupPlayer(player: Player) {
-        currentPlayer= exoPlayer
-        if(player != null){
-            val playbackState = player.playbackState
-            if(currentPlaylistItems.isEmpty()){
-                currentPlayer.stop()
-                currentPlayer.clearMediaItems()
-            }else if(playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED){
-                preparePlaylist(
-                    metadataList = currentPlaylistItems,
-                    itemToPlay = currentPlaylistItems[player.currentWindowIndex],
-                    playWhenReady = player.playWhenReady,
-                    playbackStartPositionMs = player.currentPosition
-                )
-            }
+        // currentPlayer = exoPlayer
+        //get the playback state
+        val playbackState = player.playbackState
+        if (currentPlaylistItems.isEmpty()) {
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+        } else if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
+            preparePlaylist(
+                metadataList = currentPlaylistItems,/*set the list*/
+                itemToPlay = currentPlaylistItems[player.currentWindowIndex],/*get the current window*/
+                playWhenReady = player.playWhenReady,
+                playbackStartPositionMs = player.currentPosition
+            )
         }
+        /*set the player that the connector should use. Remember the connector connects Media session
+         and player together*/
+
         mediaSessionConnector.setPlayer(player)
 
     }
 
+    /**
+     * Set up the Media session
+     */
     private fun setupMediaSession(sessionActivityPendingIntent: PendingIntent?) {
-        Log.i(TAG,"setupMediaSession: Called")
+        Log.i(TAG, "setupMediaSession: Called")
         mediaSession = MediaSessionCompat(this, TAG)
             .apply {
                 setSessionActivity(sessionActivityPendingIntent)
+                /* make the session active by setting this to true */
                 isActive = true
-                // Enable callbacks from MediaButtons and TransportControls
-//                setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
-////                        or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-////                )
                 // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
-                stateBuilder = PlaybackStateCompat.Builder()
-                    .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                setPlaybackState(stateBuilder.build())
+//                stateBuilder = PlaybackStateCompat.Builder()
+//                    .setActions(
+//                        PlaybackStateCompat.ACTION_PLAY_PAUSE
+//                    )
+//                setPlaybackState(stateBuilder.build())
                 //set the session call back
                 // setCallback(MyMediaSessionCallback())
                 /**
@@ -217,47 +221,52 @@ class AudioService : MediaBrowserServiceCompat() {
         parentId: String,
         result: Result<MutableList<MediaItem>>
     ) {
+        /**
+         * Detach this message from the current thread and allow the {@link #sendResult}
+         * call to happen later.
+         */
         result.detach()
-        var myList = mutableListOf<MediaItem>()
 
         Log.i(TAG, "$parentId: Root")
 
         val mediaItems = mutableListOf<MediaItem>()
         if (parentId == "/") {
-
             Log.i(TAG, "$parentId: Root(/)")
-            //MediaItem(MediaDescriptionCompat.fromMediaDescription())
-//            val resultSent= mediaSource.whenReady {  ready->
-//
-//            }
-
-            //serviceScope.launch {
-            val resultSent = mediaSource.whenReady { successful ->
+            /* Wait for the list of songs to be ready before sending it to the caller */
+            mediaSource.whenReady { successful ->
                 if (successful) {
                     val children = browseTree[parentId]?.map { item ->
                         MediaItem(item.description, item.flag)
                     }?.toMutableList()
+                    /**
+                     * Send the result back to the caller.
+                     */
                     result.sendResult(children)
                 }
-
             }
-
-//                myList =
-//                    InbuiltMusicSource().updateCatalog(applicationContext)!!.map {
-//                        MediaItem(it.description, it.flag)
-//                    }.toMutanbleList()
-//
-//
-//                Log.i(TAG, "$parentId: Root(/): Songs: ${myList}")
-//                result.sendResult(myList)
-            //  }
-
-
         } else {
             result.sendResult(mediaItems)
         }
 
 
+    }
+
+    /**
+     * Save the recently playing song
+     */
+    private fun saveRecentSongToStorage() {
+
+        // Obtain the current song details *before* saving them on a separate thread, otherwise
+        // the current player may have been unloaded by the time the save routine runs.
+        val description = currentPlaylistItems[exoPlayer.currentWindowIndex].description
+        val position = exoPlayer.currentPosition
+
+        serviceScope.launch {
+            storage.saveRecentSong(
+                description,
+                position
+            )
+        }
     }
 
     /**
@@ -294,15 +303,21 @@ class AudioService : MediaBrowserServiceCompat() {
         playWhenReady: Boolean,
         playbackStartPositionMs: Long
     ) {
-        val initialWindowIndex = if(itemToPlay==null)0 else metadataList.indexOf(itemToPlay)
+        Log.i(TAG, "preparePlaylist: Called")
+        val initialWindowIndex = if (itemToPlay == null) 0 else metadataList.indexOf(itemToPlay)
         currentPlaylistItems = metadataList
-        currentPlayer.playWhenReady = playWhenReady
-        currentPlayer.stop()
-        currentPlayer.clearMediaItems()
+        exoPlayer.playWhenReady = playWhenReady
+        //if the current state is playing, set play when ready to false
+        if (exoPlayer.isPlaying) {
+            exoPlayer.playWhenReady = false
+        }
+        exoPlayer.stop()
+        exoPlayer.clearMediaItems()
         val mediaSource = metadataList.toMediaSource(dataSourceFactory)
+
         exoPlayer.setMediaSource(mediaSource)
         exoPlayer.prepare()
-        exoPlayer.seekTo(initialWindowIndex,playbackStartPositionMs)
+        exoPlayer.seekTo(initialWindowIndex, playbackStartPositionMs)
 
     }
 
@@ -315,51 +330,22 @@ class AudioService : MediaBrowserServiceCompat() {
         super.onTaskRemoved(rootIntent)
     }
 
-    private fun startMyForegroundService() {
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel(notificationManager)
-        }
-        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setAutoCancel(false).setOngoing(true)
-            .setSmallIcon(R.drawable.exo_ic_default_album_image)
-            .setContentTitle("Running Smooth media").setContentText("000000000 ")
-            .setContentIntent(getMainActivityPendingIntent())
-        //start the foreground
-        startForeground(NOTIFICATION_ID, notificationBuilder.build())
-    }
-
-    private fun getMainActivityPendingIntent() =
-        PendingIntent.getActivity(
-            this, 0,
-            Intent(this, MainActivity::class.java).also {
-                it.action = ACTION_SHOW_AUDIO_FRAGMENT
-            },
-            FLAG_UPDATE_CURRENT
-        )
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(notificationManager: NotificationManager) {
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW
-        )
-        notificationManager.createNotificationChannel(channel)
-
-    }
-
     /**
      * Listen for notification events.
      */
     private inner class PlayerNotificationListener :
         PlayerNotificationManager.NotificationListener {
+        /**
+         * Called when the notification is posted
+         * Started the service here
+         */
         override fun onNotificationPosted(
             notificationId: Int,
             notification: Notification,
             ongoing: Boolean
         ) {
             if (ongoing && !isForegroundService) {
+
                 ContextCompat.startForegroundService(
                     applicationContext,
                     Intent(applicationContext, this@AudioService.javaClass)
@@ -370,12 +356,17 @@ class AudioService : MediaBrowserServiceCompat() {
             }
         }
 
+        /**
+         * Called when the notification is cancelled
+         * Stop the service here
+         */
         override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
             stopForeground(true)
             isForegroundService = false
             stopSelf()
         }
     }
+
     private inner class SmoothQueueNavigator(
         mediaSession: MediaSessionCompat
     ) : TimelineQueueNavigator(mediaSession) {
@@ -393,31 +384,39 @@ class AudioService : MediaBrowserServiceCompat() {
             command: String,
             extras: Bundle?,
             cb: ResultReceiver?
-        )=false
+        ) = false
 
         override fun getSupportedPrepareActions(): Long =
             PlaybackStateCompat.ACTION_PLAY or
                     PlaybackStateCompat.ACTION_PAUSE or
+                    PlaybackStateCompat.ACTION_STOP or
                     PlaybackStateCompat.ACTION_PLAY_PAUSE or
                     PlaybackStateCompat.ACTION_PREPARE or
-                    PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID
+                    PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID or
+                    PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
+
+
 
         override fun onPrepare(playWhenReady: Boolean) {
-            Log.i(TAG, "onPrepare: called")
             Log.i(TAG, "onPrepare: called, PlaywhenReady: $playWhenReady")
             Log.i(TAG, "onPrepare: called, currentList: $currentPlaylistItems")
+            val recentSOngList = mutableListOf<MediaItem?>()
+
+            val recentSong = recentSOngList.add(storage.loadRecentSong())
+
             val mediaMetadataCompats = mutableListOf<MediaMetadataCompat>()
             mediaSource.whenReady {
-                if(it){
+                if (it) {
 
                     mediaSource.forEach {
                         mediaMetadataCompats.add(it)
                     }
                 }
             }
-            currentPlaylistItems=mediaMetadataCompats
+
+          //  currentPlaylistItems = mediaMetadataCompats
             Log.i(TAG, "onPrepare: called, currentList: $currentPlaylistItems")
-            onPrepareFromMediaId(currentPlaylistItems[1].description.mediaId!!,playWhenReady,null)
+           // onPrepareFromMediaId(currentPlaylistItems[1].description.mediaId!!, playWhenReady, null)
 
         }
 
@@ -428,6 +427,7 @@ class AudioService : MediaBrowserServiceCompat() {
             extras: Bundle?
         ) {
             Log.i(TAG, "onPrepareFromMediaId: called")
+            Log.i(TAG, "onPrepareFromMediaId: PLAYWHENREADY $playWhenReady")
             mediaSource.whenReady {
                 val itemToPlay: MediaMetadataCompat? = mediaSource.find { item ->
                     item.id == mediaId
@@ -470,23 +470,40 @@ class AudioService : MediaBrowserServiceCompat() {
             TODO("Not yet implemented")
         }
 
+
     }
 
     /**
      * [ExoPlayer] events listener class that handles changes in the events
      */
     private inner class PlayerEventListener : Player.Listener {
-        override fun onPlaybackStateChanged(state: Int) {
 
-            Log.i(TAG, "Player.Listener.onPlaybackStateChanged: Called")
-            when (state) {
+
+
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+
+            Log.i(TAG, "Player.Listener.onPlaybackStateChanged: Called, STATE: $playbackState")
+            when (playbackState) {
                 Player.STATE_BUFFERING,
                 Player.STATE_READY -> {
                     //display the notification
-                    notificationManager.showNotificationForPlayer(currentPlayer)
+                    notificationManager.showNotificationForPlayer(exoPlayer)
+                    if (playbackState == Player.STATE_READY) {
+                        // When playing/paused save the current media item in persistent
+                        // storage so that playback can be resumed between device reboots.
+                        // Search for "media resumption" for more information.
+                        saveRecentSongToStorage()
+
+
+
+
+                    }
 
                 }
+
                 else -> {
+                    Log.i(TAG, "Player.Listener.onPlaybackStateChanged: Called, Hide STATE: $playbackState")
                     //hide the notification
                     notificationManager.hideNotification()
 

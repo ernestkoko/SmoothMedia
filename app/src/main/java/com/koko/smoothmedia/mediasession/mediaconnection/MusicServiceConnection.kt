@@ -36,7 +36,7 @@ import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection.
  *  parameters, rather than private properties. They're only required to build the
  *  [MediaBrowserConnectionCallback] and [MediaBrowserCompat] objects.
  */
-private val TAG="MusicServiceConnection"
+private val TAG = "MusicServiceConnection"
 
 class MusicServiceConnection(context: Context, serviceComponentName: ComponentName) {
     val isConnected = MutableLiveData<Boolean>().apply {
@@ -82,6 +82,7 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
     fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.unsubscribe(parentId, callback)
     }
+
     fun sendCommand(command: String, parameters: Bundle?) =
         sendCommand(command, parameters) { _, _ -> }
 
@@ -90,6 +91,7 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
         parameter: Bundle?,
         resultCallback: ((Int, Bundle?) -> Unit)
     ) = if (mediaBrowser.isConnected) {
+        Log.i(TAG, "onSendCommand: Called")
         mediaController.sendCommand(
             command,
             parameter,
@@ -100,6 +102,7 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
             })
         true
     } else {
+        Log.i(TAG, "onSendCommand: Called, false")
         false
 
     }
@@ -117,6 +120,7 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
                 .apply {
                     //register the controller call back
                     registerCallback(MediaControllerCallback())
+
                 }
 
             isConnected.postValue(true)
@@ -144,12 +148,17 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+            Log.i(TAG, "MediaControllerCallback.onPlaybackStateChanged: State: ${state!!}")
 
             playbackState.postValue(state ?: EMPTY_PLAYBACK_STATE)
         }
 
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+            Log.i(
+                TAG,
+                "MediaControllerCallback.onPlaybackStateChanged: metadata: ${metadata!!.description.title}"
+            )
             // When ExoPlayer stops we will receive a callback with "empty" metadata. This is a
             // metadata object which has been instantiated with default values. The default value
             // for media ID is null so we assume that if this value is null we are not playing

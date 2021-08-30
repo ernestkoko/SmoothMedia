@@ -23,13 +23,10 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.koko.smoothmedia.R
 import com.koko.smoothmedia.databinding.FragmentHomeScreenBinding
 import com.koko.smoothmedia.dataclass.Song
-import com.koko.smoothmedia.dataclass.SongData
 import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection
 import com.koko.smoothmedia.mediasession.services.AudioService
 import com.koko.smoothmedia.utils.InjectorUtils
@@ -47,12 +44,13 @@ val permissions: Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORA
 const val AUDIO_CHANNEL_ID = "AUDIO_CHANNEL_ID"
 
 class AudioFragment : Fragment() {
-    private lateinit var binding: FragmentHomeScreenBinding
+    private var binding: FragmentHomeScreenBinding? = null
     private val EXTERNAL_READ_PERMISSION_CODE = 11
-   // private lateinit var mAudioFragmentViewModel: AudioFragmentViewModel
+
+    // private lateinit var mAudioFragmentViewModel: AudioFragmentViewModel
     private lateinit var mMyAdapter: AudioFragmentRecyclerViewAdapter
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
-    private  val viewModel by viewModels<AudioFragmentViewModel> {
+    private val viewModel by viewModels<AudioFragmentViewModel> {
         InjectorUtils.provideAudioFragmentViewModel(requireActivity().application)
     }
 
@@ -62,25 +60,25 @@ class AudioFragment : Fragment() {
     ): View {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home_screen, container, false)
-        binding.lifecycleOwner = this
+        binding?.lifecycleOwner = this
 
 
-        binding.homeViewModel = viewModel
+        binding!!.homeViewModel = viewModel
         //initialises the adapter
         initialiseAdapter()
 
 
         checkForPermission(requireContext())
 
-  viewModel.rootMediaId.observe(viewLifecycleOwner, {rootMediaId ->
-      rootMediaId?.let {
-          Log.i(TAG, "$rootMediaId: RootMediaId")
-          viewModel.subscribe(rootMediaId)
-      }
+        viewModel.rootMediaId.observe(viewLifecycleOwner, { rootMediaId ->
+            rootMediaId?.let {
+                Log.i(TAG, "$rootMediaId: RootMediaId")
+                viewModel.subscribe(rootMediaId)
+            }
 
-  })
+        })
 
-        return binding.root
+        return binding!!.root
 
     }
 
@@ -128,8 +126,8 @@ class AudioFragment : Fragment() {
             }
         )
         //set the layout manager and adapter for the Recycler view
-        binding.songsListView.layoutManager = LinearLayoutManager(context)
-        binding.songsListView.adapter = mMyAdapter
+        binding!!.songsListView.layoutManager = LinearLayoutManager(context)
+        binding!!.songsListView.adapter = mMyAdapter
         //observe the list of songs, if it is not null submit the list to the adapter
         viewModel.songsList.observe(viewLifecycleOwner, {
             Log.i("HomeScreen:", "List: ${it}")
@@ -273,42 +271,10 @@ class AudioFragment : Fragment() {
     }
 
 
-    /**
-     * [onRequestPermissionsResult] gets fired when permission request result(s) is/are ready
-     */
-//    override fun onRequestPermissionsResult(
-//        requestCode: Int,
-//        permissions: Array<out String>,
-//        grantResults: IntArray
-//    ) {
-//
-//        Log.i(TAG, "Permission Request called")
-//        when (requestCode) {
-//            EXTERNAL_READ_PERMISSION_CODE -> {
-//                if (grantResults.isNotEmpty() &&
-//                    grantResults[0] == PackageManager.PERMISSION_GRANTED
-//                ) {
-//                    Log.i(TAG, "Permission granted2")
-//                    Log.i(TAG, "Permission granted2")
-////                    homeViewModel.launchQuerySongs()
-////                    myAdapter.submitSongsList(homeViewModel.songsList.value)
-////                    myAdapter.notifyDataSetChanged()
-//
-//                } else {
-//                    Toast.makeText(
-//                        requireContext(),
-//                        "Permission to get Audio denied",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//                }
-//            }
-//            else -> {
-//
-//
-//            }
-//
-//        }
-    //  }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
+    }
 
 
 }

@@ -1,5 +1,6 @@
 package com.koko.smoothmedia.mediasession.extension
 
+import android.media.AudioTrack
 import android.os.SystemClock
 import android.support.v4.media.session.PlaybackStateCompat
 
@@ -58,5 +59,6 @@ inline val PlaybackStateCompat.currentPlayBackPosition: Long
         (position + (timeDelta * playbackSpeed)).toLong()
     } else {
         position
+
     }
 
