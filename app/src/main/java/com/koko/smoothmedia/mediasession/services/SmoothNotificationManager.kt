@@ -1,12 +1,16 @@
 package com.koko.smoothmedia.mediasession.services
 
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -17,7 +21,7 @@ import kotlinx.coroutines.*
 
 
 const val NOW_PLAYING_CHANNEL_ID = "com.example.android.smooth.media.NOW_PLAYING"
-const val NOW_PLAYING_NOTIFICATION_ID = 0xb339 // Arbitrary number used to identify our notification
+const val NOW_PLAYING_NOTIFICATION_ID =  0xb339 // Arbitrary number used to identify our notification
 
 /**
  * A wrapper class for ExoPlayer's PlayerNotificationManager. It sets up the notification shown to
@@ -25,7 +29,7 @@ const val NOW_PLAYING_NOTIFICATION_ID = 0xb339 // Arbitrary number used to ident
  */
 class SmoothNotificationManager(
     private val context: Context,
-    sessionToken: MediaSessionCompat.Token,
+    mediaSession: MediaSessionCompat,
     notificationListener: PlayerNotificationManager.NotificationListener
 ) {
 
@@ -36,7 +40,7 @@ class SmoothNotificationManager(
 
 
     init {
-        val mediaController = MediaControllerCompat(context, sessionToken)
+        //val mediaController = MediaControllerCompat(context, sessionToken)
 
 
         notificationManager = PlayerNotificationManager.Builder(
@@ -46,16 +50,26 @@ class SmoothNotificationManager(
         ).apply {
             setSmallIconResourceId(R.drawable.ic_snotification)
             setNotificationListener(notificationListener)
-            setMediaDescriptionAdapter(DescriptionAdapter(mediaController))
+            setMediaDescriptionAdapter(DescriptionAdapter(mediaSession.controller))
+            //if these are not set the Notification will fail with error: Bad Notification
+            setChannelNameResourceId(R.string.notification_channel)
+            setChannelDescriptionResourceId(R.string.notification_channel_description)
+
 
 
         }.build()
+
         notificationManager.setUseFastForwardAction(false)
         notificationManager.setUseRewindAction(false)
         notificationManager.setUseChronometer(true)
         notificationManager.setUsePreviousActionInCompactView(true)
         notificationManager.setUseNextActionInCompactView(true)
-        notificationManager.setMediaSessionToken(sessionToken)
+        notificationManager.setMediaSessionToken(mediaSession.sessionToken)
+
+
+
+
+
 
 
     }

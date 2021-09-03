@@ -112,9 +112,9 @@ class AudioService : MediaBrowserServiceCompat() {
         setupPlayer(exoPlayer)
 
 
+
         //initialise the media source
         mediaSource = InbuiltMusicSource()
-
         //load the songs
         serviceScope.launch {
             mediaSource.load(applicationContext)
@@ -129,9 +129,11 @@ class AudioService : MediaBrowserServiceCompat() {
          */
         notificationManager = SmoothNotificationManager(
             this,
-            mediaSession.sessionToken,
+            mediaSession,
             PlayerNotificationListener()
         )
+        //display the notification
+        notificationManager.showNotificationForPlayer(exoPlayer)
         storage = PersistentStorage.getInstance(applicationContext)
 
 
@@ -145,8 +147,8 @@ class AudioService : MediaBrowserServiceCompat() {
         //get the playback state
         val playbackState = player.playbackState
         if (currentPlaylistItems.isEmpty()) {
-            exoPlayer.stop()
-            exoPlayer.clearMediaItems()
+            player.stop()
+            player.clearMediaItems()
         } else if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
             preparePlaylist(
                 metadataList = currentPlaylistItems,/*set the list*/
@@ -335,6 +337,7 @@ class AudioService : MediaBrowserServiceCompat() {
      */
     private inner class PlayerNotificationListener :
         PlayerNotificationManager.NotificationListener {
+        
         /**
          * Called when the notification is posted
          * Started the service here
@@ -350,8 +353,10 @@ class AudioService : MediaBrowserServiceCompat() {
                     applicationContext,
                     Intent(applicationContext, this@AudioService.javaClass)
                 )
+                Log.i(TAG, "NotificationID: $notificationId")
 
                 startForeground(notificationId, notification)
+
                 isForegroundService = true
             }
         }
