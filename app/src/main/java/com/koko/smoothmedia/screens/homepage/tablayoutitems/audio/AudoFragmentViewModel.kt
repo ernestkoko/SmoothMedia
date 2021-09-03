@@ -25,7 +25,7 @@ import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection
 import kotlinx.coroutines.*
 import java.util.*
 
-private const val TAG = "HomeScreen VM"
+private const val TAG = "AudioFragmentViewModel"
 
 /**
  * A view model class for the Home Screen
@@ -224,7 +224,7 @@ class AudioFragmentViewModel(
             }
         } else {
             Log.i(TAG, "playMediaItem: Nul extra")
-            transportControls.prepare()
+
             transportControls.playFromMediaId(mediaItem.id, null)
 
 

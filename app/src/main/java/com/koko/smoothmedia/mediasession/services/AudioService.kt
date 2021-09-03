@@ -143,6 +143,8 @@ class AudioService : MediaBrowserServiceCompat() {
      * Set up the player and load the list of songs[MediaMetadataCompat]s onto the player
      */
     private fun setupPlayer(player: Player) {
+        Log.i(TAG, "setupPlayer: Called")
+
         // currentPlayer = exoPlayer
         //get the playback state
         val playbackState = player.playbackState
@@ -310,11 +312,11 @@ class AudioService : MediaBrowserServiceCompat() {
         currentPlaylistItems = metadataList
         exoPlayer.playWhenReady = playWhenReady
         //if the current state is playing, set play when ready to false
-        if (exoPlayer.isPlaying) {
-            exoPlayer.playWhenReady = false
-        }
-        exoPlayer.stop()
-        exoPlayer.clearMediaItems()
+//        if (exoPlayer.isPlaying) {
+//            exoPlayer.playWhenReady = false
+//        }
+//        exoPlayer.stop()
+//        exoPlayer.clearMediaItems()
         val mediaSource = metadataList.toMediaSource(dataSourceFactory)
 
         exoPlayer.setMediaSource(mediaSource)
