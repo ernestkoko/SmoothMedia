@@ -6,11 +6,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
+import android.util.Log
 import com.bumptech.glide.Glide
 import com.koko.smoothmedia.mediasession.extension.asAlbumArtContentUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
+private val TAG = "PersistenceStorage"
 class PersistentStorage private constructor(val context: Context){
 
     /**
@@ -34,6 +35,7 @@ class PersistentStorage private constructor(val context: Context){
     }
 
     suspend fun saveRecentSong(description: MediaDescriptionCompat, position: Long) {
+        Log.i(TAG,"saveRecentSong: Called")
 
         withContext(Dispatchers.IO) {
 
@@ -63,6 +65,7 @@ class PersistentStorage private constructor(val context: Context){
         }
     }
     fun loadRecentSong(): MediaBrowserCompat.MediaItem? {
+        Log.i(TAG,"loadRecentSong: Called")
         val mediaId = preferences.getString(RECENT_SONG_MEDIA_ID_KEY, null)
         return if (mediaId == null) {
             null

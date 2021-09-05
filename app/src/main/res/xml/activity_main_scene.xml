@@ -23,6 +23,7 @@
             android:layout_height="50dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
+
             android:alpha="0.0"
 
 
@@ -35,6 +36,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:visibility="visible"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+
+            app:layout_constraintEnd_toStartOf="@id/play_pause_button"
             app:layout_constraintStart_toStartOf="@id/reference_container"
             app:layout_constraintTop_toTopOf="@id/reference_container" />
         <Constraint
@@ -77,8 +82,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_marginEnd="12dp"
             android:layout_marginTop="16dp"
             android:visibility="visible"
+            android:maxLines="2"
             app:layout_constraintEnd_toEndOf="@id/reference_container"
             app:layout_constraintStart_toStartOf="@id/reference_container"
             app:layout_constraintTop_toTopOf="@id/reference_container" />

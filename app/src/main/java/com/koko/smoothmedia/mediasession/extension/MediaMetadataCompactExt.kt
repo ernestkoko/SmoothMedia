@@ -245,6 +245,7 @@ inline var MediaMetadataCompat.Builder.flag: Int
 fun MediaMetadataCompat.toMediaSource(dataSourceFactory: DataSource.Factory) =
     ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaUri)
 
+
 /**
  * Extension method for building a [ConcatenatingMediaSource] given a [List]
  * of [MediaMetadataCompat] objects.
@@ -260,6 +261,13 @@ fun List<MediaMetadataCompat>.toMediaSource(
     }
     return concatenatingMediaSource
 }
+//fun List<MediaItem>.toMedia( dataSourceFactory: DataSource.Factory): ConcatenatingMediaSource{
+//    val concat = ConcatenatingMediaSource()
+//    forEach {
+//        concat.addMediaSource(it)
+//    }
+//
+//}
 
 
 

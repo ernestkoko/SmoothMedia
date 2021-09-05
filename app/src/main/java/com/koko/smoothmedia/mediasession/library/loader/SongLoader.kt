@@ -2,6 +2,7 @@ package com.koko.smoothmedia.mediasession.library.loader
 
 import android.content.ContentUris
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.support.v4.media.MediaDescriptionCompat
@@ -93,7 +94,22 @@ class SongLoader {
                             id
                         )
 
+                        /**
+                         *  get album uri. [albumArtUri] is the root uri to append the [albumId] to
+                         *  in order to get the full uri path of the album art
+                         */
+                        val albumRootUri = Uri.parse("content://media/external/audio/albumart")
+                        val albumArtUri = ContentUris.withAppendedId(
+                            albumRootUri,
+                            albumId
+                        )
+
+
+
+                        Log.i(TAG, "Content Album ID: $albumId")
+                        Log.i(TAG, "Content Album Uri: $albumArtUri")
                         Log.i(TAG, "Content Uri: $contentUri")
+
                         // Log.i(TAG, "Playlist Uri: $playListId")
 
                         val song = Song(
@@ -106,6 +122,7 @@ class SongLoader {
                             "Data",
                             dateModified,
                             albumId,
+                            albumArtUri,
                             albumName,
                             artistId,
                             artistName
@@ -134,6 +151,7 @@ fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {
     trackNumber = song.trackNumber
     duration = song.duration
     artist = song.artistName
+    albumArtUri = song.albumArtUri.toString()
     downloadStatus = MediaDescriptionCompat.STATUS_NOT_DOWNLOADED
     return this
 

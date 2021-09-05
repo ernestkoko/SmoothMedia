@@ -14,7 +14,7 @@ import com.koko.smoothmedia.databinding.FragmentHomePageBinding
 
 
 class HomePageFragment : Fragment() {
-    private lateinit var binding: FragmentHomePageBinding
+    private var binding: FragmentHomePageBinding? = null
     private lateinit var viewPager: ViewPager2
     private lateinit var mHomePageFragmentAdapter: HomePageFragmentAdapter
     private lateinit var tabLayout: TabLayout
@@ -25,14 +25,14 @@ class HomePageFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home_page, container, false)
-        return binding.root
+        return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mHomePageFragmentAdapter = HomePageFragmentAdapter(this)
-        viewPager = binding.viewPager
-        tabLayout = binding.tabLayout
+        viewPager = binding?.viewPager!!
+        tabLayout = binding?.tabLayout!!
         viewPager.adapter = mHomePageFragmentAdapter
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
@@ -44,5 +44,8 @@ class HomePageFragment : Fragment() {
         }.attach()
     }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        binding = null
+    }
 }

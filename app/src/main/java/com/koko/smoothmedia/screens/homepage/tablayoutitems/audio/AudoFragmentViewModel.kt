@@ -42,9 +42,8 @@ class AudioFragmentViewModel(
      */
     private val _mediaItems = MutableLiveData<List<MediaItemData>>()
     val mediaItems: LiveData<List<MediaItemData>> = _mediaItems
-    private val _songsListan = MutableLiveData<List<Song>>()
-    val songsListan: LiveData<List<Song>>
-        get() = _songsListan
+
+
 
 
     private val subscriptionCallback = object : SubscriptionCallback() {
@@ -60,7 +59,6 @@ class AudioFragmentViewModel(
         ) {
             Log.i(TAG, "List of Children: $children")
             Log.i(TAG, "Parent Id: $parentId")
-
             val lisChildren = children.map { child ->
 
                 val description = child.description
@@ -224,7 +222,7 @@ class AudioFragmentViewModel(
             }
         } else {
             Log.i(TAG, "playMediaItem: Nul extra")
-
+            transportControls.prepare()
             transportControls.playFromMediaId(mediaItem.id, null)
 
 

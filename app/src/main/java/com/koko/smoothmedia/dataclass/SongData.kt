@@ -50,6 +50,7 @@ data class Song(
     val data: String = "",
     val dateModified: Long = -1,
     val albumId: Long = -1,
+    val albumArtUri: Uri? =null,
     val albumName: String = "",
     val artistId: Long = -1,
     val artistName: String = ""

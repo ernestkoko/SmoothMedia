@@ -12,7 +12,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
@@ -40,20 +39,18 @@ import kotlinx.coroutines.*
  *
  */
 class AudioService : MediaBrowserServiceCompat() {
-    val TAG = "AudiService"
+    val TAG = "AudioService"
     //private lateinit var currentPlayer: Player
 
     // private lateinit var mediaSource: MusicSource
     private lateinit var notificationManager: SmoothNotificationManager
 
-    //
-    private lateinit var notificationBuilder: NotificationCompat.Builder
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
     protected lateinit var mediaSession: MediaSessionCompat
     protected lateinit var mediaSessionConnector: MediaSessionConnector
 
-    //private lateinit var stateBuilder: PlaybackStateCompat.Builder
+
     private var currentPlaylistItems: List<MediaMetadataCompat> = emptyList()
     private lateinit var mediaSource: MusicSource
     private lateinit var storage: PersistentStorage
@@ -110,7 +107,6 @@ class AudioService : MediaBrowserServiceCompat() {
 
         //setup player
         setupPlayer(exoPlayer)
-
 
 
         //initialise the media source
@@ -176,14 +172,6 @@ class AudioService : MediaBrowserServiceCompat() {
                 setSessionActivity(sessionActivityPendingIntent)
                 /* make the session active by setting this to true */
                 isActive = true
-                // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
-//                stateBuilder = PlaybackStateCompat.Builder()
-//                    .setActions(
-//                        PlaybackStateCompat.ACTION_PLAY_PAUSE
-//                    )
-//                setPlaybackState(stateBuilder.build())
-                //set the session call back
-                // setCallback(MyMediaSessionCallback())
                 /**
                  * In order for [MediaBrowserCompat.ConnectionCallback.onConnected] to be called,
                  * a [MediaSessionCompat.Token] needs to be set on the [MediaBrowserServiceCompat].
@@ -211,7 +199,7 @@ class AudioService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-        Log.i(TAG, "$clientPackageName: ClientPackageName")
+        Log.i(TAG, " onGetRoot: Called")
         Log.i(TAG, "$clientUid: ClientUid")
         return BrowserRoot("/", null)
     }
@@ -231,7 +219,7 @@ class AudioService : MediaBrowserServiceCompat() {
          */
         result.detach()
 
-        Log.i(TAG, "$parentId: Root")
+        Log.i(TAG, "onLoadChildren: Called  $parentId: Root")
 
         val mediaItems = mutableListOf<MediaItem>()
         if (parentId == "/") {
@@ -316,7 +304,7 @@ class AudioService : MediaBrowserServiceCompat() {
 //            exoPlayer.playWhenReady = false
 //        }
 //        exoPlayer.stop()
-//        exoPlayer.clearMediaItems()
+//        exoPlayer.clearMediaItems()zzz
         val mediaSource = metadataList.toMediaSource(dataSourceFactory)
 
         exoPlayer.setMediaSource(mediaSource)
@@ -339,7 +327,7 @@ class AudioService : MediaBrowserServiceCompat() {
      */
     private inner class PlayerNotificationListener :
         PlayerNotificationManager.NotificationListener {
-        
+
         /**
          * Called when the notification is posted
          * Started the service here
@@ -403,27 +391,19 @@ class AudioService : MediaBrowserServiceCompat() {
                     PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
 
 
-
         override fun onPrepare(playWhenReady: Boolean) {
             Log.i(TAG, "onPrepare: called, PlaywhenReady: $playWhenReady")
-            Log.i(TAG, "onPrepare: called, currentList: $currentPlaylistItems")
-            val recentSOngList = mutableListOf<MediaItem?>()
 
-            val recentSong = recentSOngList.add(storage.loadRecentSong())
 
-            val mediaMetadataCompats = mutableListOf<MediaMetadataCompat>()
-            mediaSource.whenReady {
-                if (it) {
+            val recentSong = storage.loadRecentSong() ?: return
 
-                    mediaSource.forEach {
-                        mediaMetadataCompats.add(it)
-                    }
-                }
-            }
+            onPrepareFromMediaId(
+                recentSong.mediaId!!, playWhenReady, recentSong.description.extras
+            )
 
-          //  currentPlaylistItems = mediaMetadataCompats
-            Log.i(TAG, "onPrepare: called, currentList: $currentPlaylistItems")
-           // onPrepareFromMediaId(currentPlaylistItems[1].description.mediaId!!, playWhenReady, null)
+            //  currentPlaylistItems = mediaMetadataCompats
+
+            // onPrepareFromMediaId(currentPlaylistItems[1].description.mediaId!!, playWhenReady, null)
 
         }
 
@@ -434,7 +414,7 @@ class AudioService : MediaBrowserServiceCompat() {
             extras: Bundle?
         ) {
             Log.i(TAG, "onPrepareFromMediaId: called")
-            Log.i(TAG, "onPrepareFromMediaId: PLAYWHENREADY $playWhenReady")
+            // Log.i(TAG, "onPrepareFromMediaId: PLAYWHENREADY $playWhenReady")
             mediaSource.whenReady {
                 val itemToPlay: MediaMetadataCompat? = mediaSource.find { item ->
                     item.id == mediaId
@@ -486,8 +466,6 @@ class AudioService : MediaBrowserServiceCompat() {
     private inner class PlayerEventListener : Player.Listener {
 
 
-
-
         override fun onPlaybackStateChanged(playbackState: Int) {
 
             Log.i(TAG, "Player.Listener.onPlaybackStateChanged: Called, STATE: $playbackState")
@@ -503,14 +481,15 @@ class AudioService : MediaBrowserServiceCompat() {
                         saveRecentSongToStorage()
 
 
-
-
                     }
 
                 }
 
                 else -> {
-                    Log.i(TAG, "Player.Listener.onPlaybackStateChanged: Called, Hide STATE: $playbackState")
+                    Log.i(
+                        TAG,
+                        "Player.Listener.onPlaybackStateChanged: Called, Hide STATE: $playbackState"
+                    )
                     //hide the notification
                     notificationManager.hideNotification()
 
@@ -521,30 +500,6 @@ class AudioService : MediaBrowserServiceCompat() {
         }
     }
 
-    inner class MyMediaSessionCallback : MediaSessionCompat.Callback() {
-        override fun onPlay() {
-            super.onPlay()
-            Log.i(TAG, "onPlay")
-        }
-
-        override fun onStop() {
-            super.onStop()
-            Log.i(TAG, "onSTop")
-        }
-
-        override fun onPause() {
-            super.onPause()
-            Log.i(TAG, "onPause")
-        }
-
-        override fun onSkipToNext() {
-            super.onSkipToNext()
-        }
-
-        override fun onSkipToPrevious() {
-            super.onSkipToPrevious()
-        }
-    }
 
 }
 

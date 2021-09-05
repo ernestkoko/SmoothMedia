@@ -19,4 +19,5 @@
     <string name="play_pause_button">Play/pause button</string>
     <string name="next_button">Next button</string>
     <string name="previous_button">Previous button</string>
+    <string name="please_grant_permission_to_read_media_files_from_storage">Please grant permission to read media files from storage</string>
 </resources>
