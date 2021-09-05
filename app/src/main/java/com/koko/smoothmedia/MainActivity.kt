@@ -4,12 +4,15 @@ package com.koko.smoothmedia
 import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.Target
 import com.koko.smoothmedia.databinding.ActivityMainBinding
 import com.koko.smoothmedia.utils.InjectorUtils
 
@@ -50,9 +53,10 @@ class MainActivity : AppCompatActivity() {
         viewModel.mediaMetadata.observe(this,
             Observer { mediaItem ->
                 Log.i(TAG, "MediaItem: ${mediaItem.subtitle}")
-                binding.songTitle.text = mediaItem.title
-                binding.songSubtitle.text = mediaItem.subtitle
-                //updateUI(view, mediaItem)
+//                binding.songTitle.text = mediaItem.title
+//                binding.songSubtitle.text = mediaItem.subtitle
+
+                updateUI(binding.root, mediaItem)
             })
         viewModel.mediaButtonRes.observe(this,
             Observer { res ->
@@ -67,6 +71,7 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -110,6 +115,22 @@ class MainActivity : AppCompatActivity() {
        // animator.disableViewDuringAnimation(binding.playPauseButton )
         animator.start()
 
+    }
+    /**
+     * Internal function used to update all UI elements except for the current item playback
+     */
+    private fun updateUI(view: View, metadata: MainActivityViewModel.NowPlayingMetadata) = with(binding) {
+        if (metadata.albumArtUri == Uri.EMPTY) {
+            albumImage.setImageResource(R.drawable.ic_album_black_24dp)
+        } else {
+            Glide.with(view)
+                .load(metadata.albumArtUri)
+                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                .into(albumImage)
+        }
+        songTitle.text = metadata.title
+        songSubtitle.text = metadata.subtitle
+        //duration.text = metadata.duration
     }
 
 

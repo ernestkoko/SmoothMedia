@@ -109,6 +109,13 @@
             android:src="@drawable/exo_controls_previous"
 
             />
+        <ImageView
+            android:id="@+id/album_image"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
 
         <androidx.constraintlayout.widget.ConstraintLayout

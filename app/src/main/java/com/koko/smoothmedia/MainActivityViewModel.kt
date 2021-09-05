@@ -135,14 +135,15 @@ class MainActivityViewModel(
 
 
     }
-    fun doneWithAnimation(){
-        _animatePlayPauseButton.value= false
-        _animateNextButton.value= false
+
+    fun doneWithAnimation() {
+        _animatePlayPauseButton.value = false
+        _animateNextButton.value = false
         _animatePreviousButton.value = false
     }
 
     fun next() {
-        _animateNextButton.value =true
+        _animateNextButton.value = true
         musicServiceConnection.transportControl.skipToNext()
     }
 
@@ -178,7 +179,7 @@ class MainActivityViewModel(
         if (mediaMetadata.duration != 0L && mediaMetadata.id != null) {
             val nowPlayingMetadata = NowPlayingMetadata(
                 mediaMetadata.id!!,
-                /* mediaMetadata.albumArtUri,*/Uri.parse(""),
+               mediaMetadata.albumArtUri,
                 mediaMetadata.title?.trim(),
                 mediaMetadata.displaySubtitle?.trim(),
                 NowPlayingMetadata.timestampToMSS(app, mediaMetadata.duration)

@@ -30,26 +30,33 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/play_pause_button"
             app:layout_constraintStart_toStartOf="parent" />
+        <Constraint
+            android:id="@id/album_image"
+            android:layout_width="50dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="@id/reference_container"
+            app:layout_constraintStart_toStartOf="@id/reference_container"
+            app:layout_constraintTop_toTopOf="@id/reference_container" />
 
         <Constraint
             android:id="@id/song_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:visibility="visible"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
+            android:visibility="visible"
 
             app:layout_constraintEnd_toStartOf="@id/play_pause_button"
-            app:layout_constraintStart_toStartOf="@id/reference_container"
+            app:layout_constraintStart_toEndOf="@id/album_image"
             app:layout_constraintTop_toTopOf="@id/reference_container" />
         <Constraint
             android:id="@id/play_pause_button"
             android:layout_width="50dp"
             android:layout_height="0dp"
-            android:visibility="visible"
-            android:layout_marginEnd="10dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="10dp"
             android:layout_marginBottom="8dp"
+            android:visibility="visible"
 
             app:layout_constraintBottom_toBottomOf="@id/reference_container"
             app:layout_constraintEnd_toEndOf="parent"
@@ -77,15 +84,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+
         <Constraint
             android:id="@id/song_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="12dp"
             android:layout_marginTop="16dp"
-            android:visibility="visible"
+            android:layout_marginEnd="12dp"
             android:maxLines="2"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="@id/reference_container"
             app:layout_constraintStart_toStartOf="@id/reference_container"
             app:layout_constraintTop_toTopOf="@id/reference_container" />
@@ -99,6 +107,16 @@
             app:layout_constraintEnd_toEndOf="@id/song_title"
             app:layout_constraintStart_toStartOf="@id/song_title"
             app:layout_constraintTop_toBottomOf="@id/song_title" />
+        <Constraint
+            android:id="@id/album_image"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toEndOf="@id/reference_container"
+            app:layout_constraintBottom_toTopOf="@id/play_pause_button"
+            app:layout_constraintStart_toStartOf="@id/reference_container"
+            app:layout_constraintTop_toBottomOf="@id/song_subtitle" />
         <Constraint
             android:id="@id/play_pause_button"
             android:layout_width="50dp"
@@ -118,8 +136,8 @@
 
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/play_pause_button"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/play_pause_button"
 
 
             />
@@ -127,12 +145,11 @@
             android:id="@id/previous_button"
             android:layout_width="50dp"
             android:layout_height="0dp"
-            android:visibility="visible"
             android:layout_marginBottom="12dp"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-           app:layout_constraintEnd_toStartOf="@id/play_pause_button"
-            app:layout_constraintStart_toStartOf="parent"
-             />
+            app:layout_constraintEnd_toStartOf="@id/play_pause_button"
+            app:layout_constraintStart_toStartOf="parent" />
     </ConstraintSet>
 
 

@@ -66,7 +66,9 @@ class AudioFragmentViewModel(
                     description.mediaId!!,
                     description.mediaUri,
                     description.title.toString(),
-                    artistName = description.subtitle.toString()
+                    artistName = description.subtitle.toString(),
+                    albumArtUri = description.iconUri
+
                 )
             }
             Log.i(TAG, "List of Songs: ${lisChildren}")
