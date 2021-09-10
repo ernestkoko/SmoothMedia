@@ -14,7 +14,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.media.MediaBrowserServiceCompat
-import com.koko.smoothmedia.mediasession.extension.id
+import com.koko.smoothmedia.mediasession.extension.*
 import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection.MediaBrowserConnectionCallback
 
 /**
@@ -146,6 +146,9 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
     }
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
+        override fun onSessionEvent(event: String?, extras: Bundle?) {
+            Log.i(TAG, "onSessionEvent: event: $event")
+        }
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             Log.i(TAG, "MediaControllerCallback.onPlaybackStateChanged: State: ${state!!}")
@@ -155,10 +158,15 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
 
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+
             Log.i(
                 TAG,
-                "MediaControllerCallback.onPlaybackStateChanged: metadata: ${metadata!!.description.title}"
+                "MediaControllerCallback.onPlaybackStateChanged: onMetadataChanged" +
+                        ": ${metadata!!}"
             )
+
+
+
             // When ExoPlayer stops we will receive a callback with "empty" metadata. This is a
             // metadata object which has been instantiated with default values. The default value
             // for media ID is null so we assume that if this value is null we are not playing
@@ -167,7 +175,7 @@ class MusicServiceConnection(context: Context, serviceComponentName: ComponentNa
                 if (metadata?.id == null) {
                     NOTHING_PLAYING
                 } else {
-                    metadata
+                 metadata
                 }
             )
         }

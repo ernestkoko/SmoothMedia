@@ -4,27 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/permissionFragment">
-    <action android:id="@+id/action_global_audio_fragment"
-        app:destination="@id/homeScreen"
-        app:launchSingleTop="true"/>
 
     <fragment
-        android:id="@+id/homeScreen"
-        android:name="com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragment"
-        android:label="fragment_home_screen"
-        tools:layout="@layout/fragment_home_screen" />
-    <fragment
         android:id="@+id/homePage"
-        android:name="com.koko.smoothmedia.screens.homepage.HomePageFragment"
+        android:name="com.koko.smoothmedia.screens.homepage.ViewPagerFragment"
         android:label="fragment_home_page"
-        tools:layout="@layout/fragment_home_page" />
+        tools:layout="@layout/fragment_view_pager" />
     <fragment
         android:id="@+id/permissionFragment"
-        android:name="com.koko.smoothmedia.PermissionFragment"
+        android:name="com.koko.smoothmedia.screens.homepage.permissions.PermissionFragment"
         android:label="fragment_permission"
-        tools:layout="@layout/fragment_permission" >
-        <action
-            android:id="@+id/action_permissionFragment_to_homePage"
-            app:destination="@id/homePage" />
-    </fragment>
+        tools:layout="@layout/fragment_permission" />
 </navigation>

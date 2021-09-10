@@ -7,6 +7,7 @@ import com.koko.smoothmedia.MainActivityViewModel
 import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection
 import com.koko.smoothmedia.mediasession.services.AudioService
 import com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragmentViewModel
+import com.koko.smoothmedia.screens.homepage.tablayoutitems.video.VideoFragmentViewModel
 
 object InjectorUtils {
     private fun provideMusicService(context: Context): MusicServiceConnection {
@@ -24,5 +25,9 @@ object InjectorUtils {
     fun provideMainActivityViewModel(application: Application):MainActivityViewModel.Factory{
         val musicServiceConnection = provideMusicService(application)
         return MainActivityViewModel.Factory(application,musicServiceConnection)
+    }
+    fun provideVideoFragmentViewModel(application: Application):VideoFragmentViewModel.Factory{
+        val musicServiceConnection = provideMusicService(application)
+        return VideoFragmentViewModel.Factory(application,musicServiceConnection)
     }
 }

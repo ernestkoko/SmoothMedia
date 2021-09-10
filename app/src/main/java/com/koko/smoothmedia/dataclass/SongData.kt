@@ -39,7 +39,10 @@ data class MediaItemData(
     var playbackRes: Int
 )
 
-@VersionedParcelize
+/**
+ * if [isPlaying] is 0 it means it is not playing but when it is 1 it is playing
+ */
+
 data class Song(
     val id: String = "",
     val uri: Uri?=null,
@@ -50,6 +53,7 @@ data class Song(
     val data: String = "",
     val dateModified: Long = -1,
     val albumId: Long = -1,
+    val isPlaying:Boolean? =false,
     val albumArtUri: Uri? =null,
     val albumName: String = "",
     val artistId: Long = -1,

@@ -149,7 +149,7 @@ class SmoothNotificationManager(
 const val NOTIFICATION_LARGE_ICON_SIZE = 144 // px
 
 private val glideOptions = RequestOptions()
-    .fallback(R.drawable.exo_ic_default_album_image)
+    .fallback(R.drawable.ic_album_black_24dp)
     .diskCacheStrategy(DiskCacheStrategy.DATA)
 
 private const val MODE_READ_ONLY = "r"

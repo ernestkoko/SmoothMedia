@@ -2,8 +2,6 @@ package com.koko.smoothmedia.mediasession.library
 
 import android.content.Context
 import android.media.browse.MediaBrowser
-import android.net.Uri
-import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
@@ -39,46 +37,29 @@ class BrowseTree(
 ) {
     private val mediaIdToChildren = mutableMapOf<String, MutableList<MediaMetadataCompat>>()
 
+
     init {
         Log.i(TAG, "BrowseTree Init: Called")
-
         val rootList = mediaIdToChildren[SMOOTH_BROWSABLE_ROOT] ?: mutableListOf()
-        val recommendedMetadata = recommendedMediaMetadataCompat()
         val albumMetadata = albumMediaMetadataCompat()
 
-//        rootList += recommendedMetadata
-//        rootList += albumMetadata
-        //declare variable to return all songs
         val allSongsMetadata = mutableListOf<MediaMetadataCompat>()
 
-        //mediaIdToChildren[SMOOTH_BROWSABLE_ROOT] = rootList
         musicSource.forEach { mediaItem ->
-            //Log.i(TAG, "MediaItem: ${mediaItem}")
-           // allSongsMetadata.add(mediaItem)
+            rootList += mediaItem
 
-            rootList +=mediaItem
-            //Log.i(TAG, "MediaItem: ${rootList}")
-
-//            val albumMediaId = mediaItem.album.urlEncoded
-//            val albumChildren = mediaIdToChildren[albumMediaId] ?: buildAlbumRoot(mediaItem)
-//            albumChildren += mediaItem
-//            // Add the first track of each album to the 'Recommended' category
-//            if (mediaItem.trackNumber == 1L) {
-//                val recommendedChildren = mediaIdToChildren[SMOOTH_RECOMMENDED_ROOT]
-//                    ?: mutableListOf()
-//                recommendedChildren += mediaItem
-//                mediaIdToChildren[SMOOTH_RECOMMENDED_ROOT] = recommendedChildren
-//            }
-//
-//            // If this was recently played, add it to the recent root.
-//            if (mediaItem.id == recentMediaId) {
-//                mediaIdToChildren[SMOOTH_RECENT_ROOT] = mutableListOf(mediaItem)
-//            }
 
         }
         Log.i(TAG, "All Songs: ${rootList}")
-        mediaIdToChildren[SMOOTH_BROWSABLE_ROOT]= rootList
+        mediaIdToChildren[SMOOTH_ALBUMS_ROOT] = rootList.buildAlbums().toMutableList()
+        mediaIdToChildren[SMOOTH_BROWSABLE_ROOT] = rootList
     }
+
+    /**
+     * Provide access to the list of children with the `get` operator.
+     * i.e.: `browseTree\[UAMP_BROWSABLE_ROOT\]`
+     */
+    operator fun get(mediaId: String) = mediaIdToChildren[mediaId]
 
     private fun albumMediaMetadataCompat() = MediaMetadataCompat.Builder().apply {
         id = SMOOTH_ALBUMS_ROOT
@@ -97,10 +78,72 @@ class BrowseTree(
     }.build()
 
     /**
-     * Provide access to the list of children with the `get` operator.
-     * i.e.: `browseTree\[UAMP_BROWSABLE_ROOT\]`
+     * Build album children
      */
-    operator fun get(mediaId: String) = mediaIdToChildren[mediaId]
+    private fun MutableList<MediaMetadataCompat>.buildAlbums(): List<MediaMetadataCompat> {
+        Log.i(TAG, "buildAlbumChildren(): Called")
+        //get the all the album names including duplicate
+        val albumNames = this.map { it.album }
+        val albumsUniqueNames = albumNames.getAlbumsUniqueNames()
+        return this.getAlbumMediaMetadataList(albumsUniqueNames)
+    }
+
+    /**
+     * Check if a string is contained in a list of metadata.
+     */
+    private fun MutableList<MediaMetadataCompat>.contains(string: String?): Boolean {
+        val names = this.map {
+            it.album
+        }
+        return names.contains(string)
+
+    }
+
+    /**
+     * get the list of album media metadata
+     */
+    private fun MutableList<MediaMetadataCompat>.getAlbumMediaMetadataList(specialListOfNames: MutableList<String>):
+            MutableList<MediaMetadataCompat> {
+        val albumMediaMetadataList = mutableListOf<MediaMetadataCompat>()
+        mapIndexed { index, mediaMetadataCompat ->
+            if (specialListOfNames.contains(mediaMetadataCompat.album) &&
+                !albumMediaMetadataList.contains(mediaMetadataCompat.album)
+            ) {
+                val item = MediaMetadataCompat.Builder().apply {
+                    id = index.toString()
+                    album = mediaMetadataCompat.album
+                    title = mediaMetadataCompat.title
+                    albumArtUri = mediaMetadataCompat.albumArtUri.toString()
+                    flag = MediaItem.FLAG_BROWSABLE
+                }.build()
+                albumMediaMetadataList.add(item)
+            }
+
+        }
+        return albumMediaMetadataList
+    }
+
+    /**
+     * loop through a list and check if a string appears more than once. If it does add just one
+     * appearance of the string to a new list and return the new list
+     */
+    private fun List<String?>.getAlbumsUniqueNames(): MutableList<String> {
+        val specialListOfNames = mutableListOf<String>()
+        this.mapIndexed { index, s ->
+            if (index == 0) {
+                specialListOfNames.add(s!!)
+            } else {
+                if (specialListOfNames.contains(s!!)) {
+
+                } else {
+                    specialListOfNames.add(s)
+                }
+            }
+
+        }
+        return specialListOfNames
+    }
+
 
     /**
      * Builds a node, under the root, that represents an album, given
@@ -114,7 +157,7 @@ class BrowseTree(
             title = mediaItem.album
             artist = mediaItem.artist
             albumArt = mediaItem.albumArt
-           // albumArtUri = mediaItem.albumArtUri.toString()
+            // albumArtUri = mediaItem.albumArtUri.toString()
             flag = MediaItem.FLAG_BROWSABLE
         }.build()
 
@@ -139,5 +182,5 @@ const val SMOOTH_RECENT_ROOT = "__RECENT__"
 const val MEDIA_SEARCH_SUPPORTED = "android.media.browse.SEARCH_SUPPORTED"
 
 const val RESOURCE_ROOT_URI = "android.resource://com.example.android.uamp.next/drawable/"
-private val TAG ="BrowseTree"
+private val TAG = "BrowseTree"
 

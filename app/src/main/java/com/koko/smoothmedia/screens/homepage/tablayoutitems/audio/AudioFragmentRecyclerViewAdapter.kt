@@ -1,5 +1,6 @@
 package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -7,8 +8,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.koko.smoothmedia.databinding.SongItemBinding
 import com.koko.smoothmedia.dataclass.Song
-
-import com.koko.smoothmedia.dataclass.SongData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,6 +39,7 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
             is SongViewHolder -> {
                 holder.bind(data, clickListener)
 
+
             }
         }
 
@@ -53,10 +53,14 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
         adapterScope.launch {
             val items = when (list) {
                 null -> null
-                else -> list.map { it }
+                else -> list.map { it }.toList()
             }
             withContext(Dispatchers.Main) {
-                submitList(items)
+
+                submitList(items!!.toList())
+
+
+
             }
         }
     }
@@ -107,12 +111,23 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
  * [SongDiffCallback] is a class that checks if a song has changed in any form on the list
  */
 class SongDiffCallback : DiffUtil.ItemCallback<Song>() {
+    private val TAG = "SongDiffCallback"
+
+
+
     override fun areItemsTheSame(oldItem: Song, newItem: Song): Boolean {
-        return oldItem === newItem
+        return oldItem.id == newItem.id
     }
 
     override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean {
-        return oldItem.title == newItem.title
+
+        return  oldItem == newItem
+    }
+
+    override fun getChangePayload(oldItem: Song, newItem: Song): Any? {
+
+        return newItem.isPlaying
+
     }
 
 }

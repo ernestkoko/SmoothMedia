@@ -100,6 +100,10 @@ inline val MediaMetadataCompat.mediaUri: Uri
 inline val MediaMetadataCompat.downloadStatus
     get() = getLong(MediaMetadataCompat.METADATA_KEY_DOWNLOAD_STATUS)
 
+
+
+
+
 /**
  * Custom property for storing whether a [MediaMetadataCompat] item represents an
  * item that is [MediaItem.FLAG_BROWSABLE] or [MediaItem.FLAG_PLAYABLE].
@@ -107,12 +111,15 @@ inline val MediaMetadataCompat.downloadStatus
 inline val MediaMetadataCompat.flag
     get() = this.getLong(METADATA_KEY_SMOOTHMEDIA_FLAGS).toInt()
 
+
 /**
  * Useful extensions for [MediaMetadataCompat.Builder].
  */
 
 // These do not have getters, so create a message for the error.
 const val NO_GET = "Property does not have a 'get'"
+
+
 
 inline var MediaMetadataCompat.Builder.id: String
     @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
@@ -226,6 +233,7 @@ inline var MediaMetadataCompat.Builder.downloadStatus: Long
         putLong(MediaMetadataCompat.METADATA_KEY_DOWNLOAD_STATUS, value)
     }
 
+
 /**
  * Custom property for storing whether a [MediaMetadataCompat] item represents an
  * item that is [MediaItem.FLAG_BROWSABLE] or [MediaItem.FLAG_PLAYABLE].
@@ -268,7 +276,6 @@ fun List<MediaMetadataCompat>.toMediaSource(
 //    }
 //
 //}
-
 
 
 /**

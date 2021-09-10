@@ -71,7 +71,9 @@ class SongLoader {
                         cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
                     val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                     val albumNameCol =
+
                         cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+
 
                     val artistIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
                     val artistNameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
@@ -106,7 +108,7 @@ class SongLoader {
 
 
 
-                        Log.i(TAG, "Content Album ID: $albumId")
+                        Log.i(TAG, "Content Album Name: $albumName")
                         Log.i(TAG, "Content Album Uri: $albumArtUri")
                         Log.i(TAG, "Content Uri: $contentUri")
 
@@ -122,6 +124,7 @@ class SongLoader {
                             "Data",
                             dateModified,
                             albumId,
+                            false,
                             albumArtUri,
                             albumName,
                             artistId,
@@ -145,10 +148,11 @@ class SongLoader {
 }
 
 fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {
-    id = song.id
+    this.id = song.id
     mediaUri = song.uri.toString()
     title = song.title
     trackNumber = song.trackNumber
+    album = song.albumName
     duration = song.duration
     artist = song.artistName
     albumArtUri = song.albumArtUri.toString()

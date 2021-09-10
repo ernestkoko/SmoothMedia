@@ -5,22 +5,16 @@ import android.app.Application
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.SubscriptionCallback
 import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.koko.smoothmedia.R
 import com.koko.smoothmedia.dataclass.MediaItemData
 import com.koko.smoothmedia.dataclass.Song
 import com.koko.smoothmedia.mediasession.EMPTY_PLAYBACK_STATE
 import com.koko.smoothmedia.mediasession.NOTHING_PLAYING
-import com.koko.smoothmedia.mediasession.extension.id
-import com.koko.smoothmedia.mediasession.extension.isPlayEnabled
-import com.koko.smoothmedia.mediasession.extension.isPlaying
-import com.koko.smoothmedia.mediasession.extension.isPrepared
+import com.koko.smoothmedia.mediasession.extension.*
 import com.koko.smoothmedia.mediasession.mediaconnection.MusicServiceConnection
 import kotlinx.coroutines.*
 import java.util.*
@@ -40,10 +34,9 @@ class AudioFragmentViewModel(
      * Use a backing property so consumers of mediaItems only get a [LiveData] instance so
      * they don't inadvertently modify it.
      */
-    private val _mediaItems = MutableLiveData<List<MediaItemData>>()
-    val mediaItems: LiveData<List<MediaItemData>> = _mediaItems
-
-
+    private val _mediaItems = MutableLiveData<List<MediaItemData>?>()
+    val mediaItems: LiveData<List<MediaItemData>?> = _mediaItems
+    private var playbackState: PlaybackStateCompat = EMPTY_PLAYBACK_STATE
 
 
     private val subscriptionCallback = object : SubscriptionCallback() {
@@ -55,10 +48,9 @@ class AudioFragmentViewModel(
         //this returns the list of children from the media browser service compact
         override fun onChildrenLoaded(
             parentId: String,
-            children: List<MediaBrowserCompat.MediaItem>
+            children: MutableList<MediaBrowserCompat.MediaItem>
         ) {
             Log.i(TAG, "List of Children: $children")
-            Log.i(TAG, "Parent Id: $parentId")
             val lisChildren = children.map { child ->
 
                 val description = child.description
@@ -66,16 +58,23 @@ class AudioFragmentViewModel(
                     description.mediaId!!,
                     description.mediaUri,
                     description.title.toString(),
-                    artistName = description.subtitle.toString(),
-                    albumArtUri = description.iconUri
+                    isPlaying = false,
+                    albumName = description.extras!!.getString(
+                        MediaMetadataCompat.METADATA_KEY_ALBUM,
+                        "Album not set"
+                    ),
 
-                )
+                    artistName = description.subtitle.toString(),
+                    albumArtUri = description.iconUri,
+
+
+                    )
             }
-            Log.i(TAG, "List of Songs: ${lisChildren}")
-            _songsList.postValue(lisChildren)
+            _songsList?.postValue(lisChildren)
 
         }
     }
+
 
     /**
      * When the session's [PlaybackStateCompat] changes, the [mediaItems] need to be updated
@@ -83,10 +82,11 @@ class AudioFragmentViewModel(
      * (i.e.: play/pause button or blank)
      */
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
-        val playbackState = it ?: EMPTY_PLAYBACK_STATE
+        playbackState = it ?: EMPTY_PLAYBACK_STATE
         val metadata = musicServiceConnection.nowPlaying.value ?: NOTHING_PLAYING
         if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
             _mediaItems.postValue(updateState(playbackState, metadata))
+
         }
     }
 
@@ -99,14 +99,25 @@ class AudioFragmentViewModel(
     private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
         val playbackState = musicServiceConnection.playbackState.value ?: EMPTY_PLAYBACK_STATE
         val metadata = it ?: NOTHING_PLAYING
-        if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
+        if (!metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID).isNullOrEmpty()) {
             _mediaItems.postValue(updateState(playbackState, metadata))
+            Log.i(TAG, "mediaMetadataObserver: called")
+            Log.i(
+                TAG,
+                "mediaMetadataObserver: id: ${metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)}"
+            )
+
+            _songsList?.postValue(updateMetadata(metadata))
+
+
         }
     }
 
     val rootMediaId: LiveData<String> =
         Transformations.map(musicServiceConnection.isConnected) { isConnected ->
             if (isConnected) {
+
+
                 musicServiceConnection.rootMedia
 
             } else {
@@ -157,6 +168,20 @@ class AudioFragmentViewModel(
         }
     }
 
+    private fun updateMetadata(mediaMetadata: MediaMetadataCompat): List<Song> {
+        return songsList?.value?.map {
+            if (mediaMetadata.id == it.id) {
+                Log.i(TAG, "updateMetadata: Matching ${it.isPlaying}")
+                Log.i(TAG, "updateMetadata: Item ${it}")
+                it.copy(isPlaying = true)
+
+            } else {
+                it.copy(isPlaying = false)
+            }
+        }?.toList() ?: emptyList()
+
+    }
+
     private fun updateState(
         playbackState: PlaybackStateCompat,
         mediaMetadata: MediaMetadataCompat
@@ -174,17 +199,11 @@ class AudioFragmentViewModel(
     }
 
 
-
     //list of songs
-    private val _songsList = MutableLiveData<List<Song>>()
-    val songsList: LiveData<List<Song>> get() = _songsList
+    private val _songsList: MutableLiveData<List<Song>>? = MutableLiveData<List<Song>>()
+    val songsList: LiveData<List<Song>>? get() = _songsList
     private val _isPlayingSong = MutableLiveData<Boolean>()
     val isPlayingSong: LiveData<Boolean> get() = _isPlayingSong
-
-
-
-
-
 
 
     /**
@@ -196,13 +215,14 @@ class AudioFragmentViewModel(
 
 
     }
+
     /**
      * This method takes a [MediaItemData] and does one of the following:
      * - If the item is *not* the active item, then play it directly.
      * - If the item *is* the active item, check whether "pause" is a permitted command. If it is,
      *   then pause playback, otherwise send "play" to resume playback.
      */
-    private fun  playMediaItem(mediaItem: Song){
+    private fun playMediaItem(mediaItem: Song) {
         Log.i(TAG, "playMediaItem: clicked")
         val nowPlaying = musicServiceConnection.nowPlaying.value
         val transportControls = musicServiceConnection.transportControl
@@ -212,7 +232,7 @@ class AudioFragmentViewModel(
             musicServiceConnection.playbackState.value?.let { playbackState ->
                 when {
                     playbackState.isPlaying ->
-                         transportControls.pause()
+                        transportControls.pause()
                     playbackState.isPlayEnabled -> transportControls.play()
                     else -> {
                         Log.w(
@@ -224,7 +244,7 @@ class AudioFragmentViewModel(
             }
         } else {
             Log.i(TAG, "playMediaItem: Nul extra")
-            transportControls.prepare()
+
             transportControls.playFromMediaId(mediaItem.id, null)
 
 

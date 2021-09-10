@@ -1,14 +1,20 @@
 package com.koko.smoothmedia.screens.homepage.tablayoutitems.video
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.koko.smoothmedia.R
+import com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragmentViewModel
+import com.koko.smoothmedia.utils.InjectorUtils
 
 
 class VideoFragment : Fragment() {
+    private val viewModel by viewModels<VideoFragmentViewModel> {
+        InjectorUtils.provideVideoFragmentViewModel(requireActivity().application)
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +29,11 @@ class VideoFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_video, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.subscribe()
     }
 
     companion object {

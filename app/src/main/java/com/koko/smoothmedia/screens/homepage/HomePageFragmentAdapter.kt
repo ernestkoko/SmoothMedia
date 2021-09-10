@@ -6,7 +6,7 @@ import com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragment
 import com.koko.smoothmedia.screens.homepage.tablayoutitems.video.VideoFragment
 
 /**
- * [HomePageFragmentAdapter] is an adapter that switches and creates views in the [HomePageFragment]
+ * [HomePageFragmentAdapter] is an adapter that switches and creates views in the [ViewPagerFragment]
  * depending on the number of [getItemCount]
  * It takes a fragment
  */

@@ -1,24 +1,49 @@
 package com.koko.smoothmedia
 
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.NonNull
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.navigation.NavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.target.Target
 import com.koko.smoothmedia.databinding.ActivityMainBinding
+import com.koko.smoothmedia.screens.homepage.ViewPagerFragment
+import com.koko.smoothmedia.screens.homepage.permissions.PermissionFragment
 import com.koko.smoothmedia.utils.InjectorUtils
 
 
 class MainActivity : AppCompatActivity() {
+    private val TAG = "MainActivity"
     private lateinit var binding: ActivityMainBinding
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var navController: NavController
+    private lateinit var fragmentManager: FragmentManager
+    private lateinit var viewPagerFragment: ViewPagerFragment
+    private lateinit var permissionFragment: PermissionFragment
+    private val _permissionGranted = MutableLiveData<Boolean>()
+    private val permissionGranted: LiveData<Boolean>
+        get() = _permissionGranted
 
     private val viewModel by viewModels<MainActivityViewModel> {
         InjectorUtils.provideMainActivityViewModel(this.application)
@@ -28,47 +53,186 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        viewPagerFragment = ViewPagerFragment()
+        permissionFragment = PermissionFragment()
+        fragmentManager = supportFragmentManager
+
+
+
+        permissionGranted.observe(this, {
+            if (it) {
+                Log.i(TAG, "Permission Granted in: onCreateView")
+                initialiseAnObservedData()
+            }
+
+        })
+
+    }
+
+    //    private fun hideMetadataViews() {
+//        binding.motionLayout.getConstraintSet(R.id.start)?.let {
+//            it.setVisibility(R.id.reference_container, View.GONE)
+//            it.setVisibility(R.id.play_pause_button, View.GONE)
+//            it.setVisibility(R.id.song_title, View.GONE)
+//            it.setVisibility(R.id.song_subtitle, View.GONE)
+//            it.setVisibility(R.id.album_image, View.GONE)
+//
+//        }
+//
+//    }
+    private fun releaseMetadataViews() {
+        binding.motionLayout.getConstraintSet(R.id.start)?.let {
+            it.setVisibility(R.id.reference_container, View.VISIBLE)
+            it.setVisibility(R.id.play_pause_button, View.VISIBLE)
+            it.setVisibility(R.id.song_title, View.VISIBLE)
+            it.setVisibility(R.id.song_subtitle, View.VISIBLE)
+            it.setVisibility(R.id.album_image, View.VISIBLE)
+
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+        registerPermissionsCallback()
+        requestPermission()
+
+
+    }
+
+    private fun initialiseAnObservedData() {
+
+
+//        val navHostFragment =
+//            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+
+        // navController = navHostFragment.navController
 
 
         //connect the view model
         binding.mainActivityViewModel = viewModel
 
-        viewModel.animatePlayPauseButton.observe(this,{animateView->
+        viewModel.animatePlayPauseButton.observe(this, { animateView ->
             if (animateView) scaler(binding.playPauseButton) else viewModel.doneWithAnimation()
 
         })
-        viewModel.animatePreviousButton.observe(this,{animateView->
+        viewModel.animatePreviousButton.observe(this, { animateView ->
+
             if (animateView) scaler(binding.previousButton) else viewModel.doneWithAnimation()
 
         })
-        viewModel.animateNextButton.observe(this,{animateView->
+        viewModel.animateNextButton.observe(this, { animateView ->
             if (animateView) scaler(binding.nextButton) else viewModel.doneWithAnimation()
 
         })
-        // Always true, but lets lint know that as well.
-        val context = this ?: return
 
 
         // Attach observers to the LiveData coming from this ViewModel
         viewModel.mediaMetadata.observe(this,
             Observer { mediaItem ->
-                Log.i(TAG, "MediaItem: ${mediaItem.subtitle}")
-//                binding.songTitle.text = mediaItem.title
-//                binding.songSubtitle.text = mediaItem.subtitle
-
                 updateUI(binding.root, mediaItem)
             })
         viewModel.mediaButtonRes.observe(this,
             Observer { res ->
 
-                // binding.mediaButton.setImageResource(res)
+                binding.playPauseButton.setImageResource(res)
             })
         viewModel.mediaPosition.observe(this,
             Observer { pos ->
                 //  binding.position.text = MainActivityViewModel.NowPlayingMetadata.timestampToMSS(context, pos)
             })
+        viewModel.rootMediaId.observe(this,
+            { rootId ->
 
 
+            })
+
+    }
+
+
+    private fun registerPermissionsCallback() {
+        requestPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts
+                    .RequestPermission()
+            ) { isGranted ->
+                Log.i(TAG, "registerPermissionsCallback: isGranted: $isGranted")
+                if (isGranted) {
+                    Log.i(TAG, "registerPermissionsCallback: isGranted1: $isGranted")
+                    _permissionGranted.value = true
+
+
+
+                    beginTransaction(viewPagerFragment)
+
+                } else {
+                    Log.i(TAG, "registerPermissionsCallback: isGranted2: $isGranted")
+                    _permissionGranted.value = false
+                    beginTransaction(permissionFragment)
+
+
+                }
+
+            }
+    }
+
+    /**
+     * begin the transaction
+     */
+    private fun beginTransaction(@NonNull fragment1: Fragment) {
+        Log.i(TAG, "beginTransaction: Called")
+        val fragment = fragmentManager.findFragmentByTag(FRAGMENT_TAG)
+        if (fragment == null) {
+            Log.i(TAG, "beginTransaction: Called: Fragment: Null")
+            fragmentManager.beginTransaction().add(R.id.nav_host_fragment, fragment1, FRAGMENT_TAG)
+                .commit()
+
+        } else if (fragment.isAdded) {
+            Log.i(TAG, "beginTransaction: Called: Fragment: NotNull")
+            fragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, fragment1, FRAGMENT_TAG).commitNow()
+
+
+        }
+
+
+    }
+
+
+    private fun requestPermission() {
+        val permission = Manifest.permission.READ_EXTERNAL_STORAGE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    permission
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    Log.i(TAG, "requestPermission(): Permission: Granted")
+                    //permission granted. Continue with the ui flow
+                    _permissionGranted.value = true
+                    beginTransaction(viewPagerFragment)
+
+
+                }
+                shouldShowRequestPermissionRationale(permission) -> {
+                    Log.i(TAG, "requestPermission(): ShowUi")
+                    _permissionGranted.value = false
+                    //display an educational ui
+                    beginTransaction(permissionFragment)
+
+                }
+                else -> {
+                    Log.i(TAG, "requestPermission(): Permission: NotGranted")
+
+                    //request permission
+                    requestPermissionLauncher.launch(permission)
+                }
+            }
+        }
 
     }
 
@@ -81,7 +245,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    private fun ObjectAnimator.disableViewDuringAnimation(view: View, viewEnabled: Boolean=true) {
+    private fun ObjectAnimator.disableViewDuringAnimation(view: View, viewEnabled: Boolean = true) {
         addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {
                 view.isEnabled = viewEnabled
@@ -101,6 +265,10 @@ class MainActivity : AppCompatActivity() {
         })
 
     }
+
+    /**
+     * AN animation function that changes the size of a view when clicked
+     */
     private fun scaler(view: View) {
         //define the properties
         Log.i(TAG, "Scaler Called")
@@ -112,28 +280,46 @@ class MainActivity : AppCompatActivity() {
 
         animator.repeatCount = 1
         animator.repeatMode = ObjectAnimator.REVERSE
-       // animator.disableViewDuringAnimation(binding.playPauseButton )
+
+        // animator.disableViewDuringAnimation(binding.playPauseButton )
         animator.start()
 
     }
+
+    private fun trackMotionLayout() {
+        binding.motionLayout
+    }
+
     /**
      * Internal function used to update all UI elements except for the current item playback
      */
-    private fun updateUI(view: View, metadata: MainActivityViewModel.NowPlayingMetadata) = with(binding) {
-        if (metadata.albumArtUri == Uri.EMPTY) {
-            albumImage.setImageResource(R.drawable.ic_album_black_24dp)
-        } else {
-            Glide.with(view)
-                .load(metadata.albumArtUri)
-                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                .into(albumImage)
+    private fun updateUI(view: View, metadata: MainActivityViewModel.NowPlayingMetadata) =
+        with(binding) {
+            //release views to VISIBLE
+            releaseMetadataViews()
+
+
+            Log.i(TAG, "updateUI: imageUri: ${metadata.albumArtUri}")
+            if (metadata.albumArtUri == Uri.EMPTY) {
+                albumImage.setImageResource(R.drawable.ic_album_black_24dp)
+            } else {
+                Glide.with(view)
+                    .load(metadata.albumArtUri).transform(CenterCrop(), RoundedCorners(12))
+                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                    .into(albumImage)
+            }
+            Log.i(TAG, "updateUI: id: ${metadata.id}, metaData: ${metadata}")
+
+
+            songTitle.text = metadata.title
+            songSubtitle.text = metadata.subtitle
+            //duration.text = metadata.duration
+
+
         }
-        songTitle.text = metadata.title
-        songSubtitle.text = metadata.subtitle
-        //duration.text = metadata.duration
-    }
 
 
 }
 
 private val TAG = "MainActivity"
+private val FRAGMENT_TAG = "FRAGMENT_TAG"

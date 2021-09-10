@@ -1,4 +1,4 @@
-package com.koko.smoothmedia
+package com.koko.smoothmedia.screens.homepage.permissions
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -11,7 +11,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.koko.smoothmedia.R
 
 /**
  * A simple [Fragment] subclass.
@@ -19,6 +21,8 @@ import androidx.navigation.fragment.findNavController
  * create an instance of this fragment.
  */
 class PermissionFragment : Fragment() {
+
+    private val permissionViewModel: PermissionViewModel by activityViewModels()
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
 
@@ -31,22 +35,30 @@ class PermissionFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val myView =  inflater.inflate(R.layout.fragment_permission, container, false)
+        val myView = inflater.inflate(R.layout.fragment_permission, container, false)
         requestPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
 
-        ) {
-            if (it) {
-                findNavController().navigate(R.id.action_permissionFragment_to_homePage)
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                //permission granted. Continue with the ui flow
+                findNavController().navigate(R.id.homePage)
+                findNavController().popBackStack()
 
+
+
+            }else{
+                requestPermission()
             }
 
+
         }
-        requestPermission()
+
 
 
         return myView
     }
+
 
 
     private fun requestPermission() {
@@ -58,7 +70,8 @@ class PermissionFragment : Fragment() {
                     permission
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     //permission granted. Continue with the ui flow
-                    findNavController().navigate(R.id.action_permissionFragment_to_homePage)
+                    findNavController().navigate(R.id.homePage)
+                    findNavController().popBackStack()
 
 
                 }

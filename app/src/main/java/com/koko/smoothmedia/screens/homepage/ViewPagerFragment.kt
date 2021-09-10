@@ -10,11 +10,11 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.koko.smoothmedia.R
-import com.koko.smoothmedia.databinding.FragmentHomePageBinding
+import com.koko.smoothmedia.databinding.FragmentViewPagerBinding
 
 
-class HomePageFragment : Fragment() {
-    private var binding: FragmentHomePageBinding? = null
+class ViewPagerFragment : Fragment() {
+    private var binding: FragmentViewPagerBinding? = null
     private lateinit var viewPager: ViewPager2
     private lateinit var mHomePageFragmentAdapter: HomePageFragmentAdapter
     private lateinit var tabLayout: TabLayout
@@ -24,7 +24,7 @@ class HomePageFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home_page, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_view_pager, container, false)
         return binding?.root
     }
 

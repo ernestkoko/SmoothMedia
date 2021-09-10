@@ -18,6 +18,7 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
+import com.google.android.exoplayer2.metadata.Metadata
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
@@ -25,6 +26,7 @@ import com.koko.smoothmedia.mediasession.extension.*
 import com.koko.smoothmedia.mediasession.library.BrowseTree
 import com.koko.smoothmedia.mediasession.library.InbuiltMusicSource
 import com.koko.smoothmedia.mediasession.library.MusicSource
+import com.koko.smoothmedia.mediasession.library.SMOOTH_ALBUMS_ROOT
 import kotlinx.coroutines.*
 
 /**
@@ -104,6 +106,17 @@ class AudioService : MediaBrowserServiceCompat() {
             }
         // Create a new MediaSession.
         setupMediaSession(sessionActivityPendingIntent)
+        /**
+         * The notification manager will use our player and media session to decide when to post
+         * notifications. When notifications are posted or removed our listener will be called, this
+         * allows us to promote the service to foreground (required so that we're not killed if
+         * the main UI is not visible).
+         */
+        notificationManager = SmoothNotificationManager(
+            this,
+            mediaSession,
+            PlayerNotificationListener()
+        )
 
         //setup player
         setupPlayer(exoPlayer)
@@ -117,17 +130,7 @@ class AudioService : MediaBrowserServiceCompat() {
         }
 
 
-        /**
-         * The notification manager will use our player and media session to decide when to post
-         * notifications. When notifications are posted or removed our listener will be called, this
-         * allows us to promote the service to foreground (required so that we're not killed if
-         * the main UI is not visible).
-         */
-        notificationManager = SmoothNotificationManager(
-            this,
-            mediaSession,
-            PlayerNotificationListener()
-        )
+
         //display the notification
         notificationManager.showNotificationForPlayer(exoPlayer)
         storage = PersistentStorage.getInstance(applicationContext)
@@ -140,6 +143,13 @@ class AudioService : MediaBrowserServiceCompat() {
      */
     private fun setupPlayer(player: Player) {
         Log.i(TAG, "setupPlayer: Called")
+
+        /*set the player that the connector should use. Remember the connector connects Media session
+        and player together*/
+
+        mediaSessionConnector.setPlayer(player)
+//        player.prepare()
+//        player.stop()
 
         // currentPlayer = exoPlayer
         //get the playback state
@@ -155,10 +165,7 @@ class AudioService : MediaBrowserServiceCompat() {
                 playbackStartPositionMs = player.currentPosition
             )
         }
-        /*set the player that the connector should use. Remember the connector connects Media session
-         and player together*/
 
-        mediaSessionConnector.setPlayer(player)
 
     }
 
@@ -222,7 +229,7 @@ class AudioService : MediaBrowserServiceCompat() {
         Log.i(TAG, "onLoadChildren: Called  $parentId: Root")
 
         val mediaItems = mutableListOf<MediaItem>()
-        if (parentId == "/") {
+        if (parentId == "/" || parentId == SMOOTH_ALBUMS_ROOT) {
             Log.i(TAG, "$parentId: Root(/)")
             /* Wait for the list of songs to be ready before sending it to the caller */
             mediaSource.whenReady { successful ->
@@ -230,6 +237,11 @@ class AudioService : MediaBrowserServiceCompat() {
                     val children = browseTree[parentId]?.map { item ->
                         MediaItem(item.description, item.flag)
                     }?.toMutableList()
+                    currentPlaylistItems = browseTree[parentId]?.map {
+                        it
+                    }!!
+
+
                     /**
                      * Send the result back to the caller.
                      */
@@ -299,12 +311,7 @@ class AudioService : MediaBrowserServiceCompat() {
         val initialWindowIndex = if (itemToPlay == null) 0 else metadataList.indexOf(itemToPlay)
         currentPlaylistItems = metadataList
         exoPlayer.playWhenReady = playWhenReady
-        //if the current state is playing, set play when ready to false
-//        if (exoPlayer.isPlaying) {
-//            exoPlayer.playWhenReady = false
-//        }
-//        exoPlayer.stop()
-//        exoPlayer.clearMediaItems()zzz
+       //build a [ConcatenatingMediaSource]
         val mediaSource = metadataList.toMediaSource(dataSourceFactory)
 
         exoPlayer.setMediaSource(mediaSource)
@@ -401,9 +408,6 @@ class AudioService : MediaBrowserServiceCompat() {
                 recentSong.mediaId!!, playWhenReady, recentSong.description.extras
             )
 
-            //  currentPlaylistItems = mediaMetadataCompats
-
-            // onPrepareFromMediaId(currentPlaylistItems[1].description.mediaId!!, playWhenReady, null)
 
         }
 
@@ -464,7 +468,10 @@ class AudioService : MediaBrowserServiceCompat() {
      * [ExoPlayer] events listener class that handles changes in the events
      */
     private inner class PlayerEventListener : Player.Listener {
+        override fun onMetadata(metadata: Metadata) {
+            super.onMetadata(metadata)
 
+        }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
 
@@ -497,6 +504,17 @@ class AudioService : MediaBrowserServiceCompat() {
 
 
             }
+        }
+
+        /**
+         * Player changes to a new media item on the playlist
+         */
+        override fun onMediaItemTransition(
+            mediaItem: com.google.android.exoplayer2.MediaItem?,
+            reason: Int
+        ) {
+            Log.i(TAG, "onMediaItemTransition: Cal")
+
         }
     }
 

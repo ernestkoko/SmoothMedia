@@ -67,6 +67,30 @@ class MainActivityViewModel(
 
     private var updatePosition = true
     private val handler = Handler(Looper.getMainLooper())
+    val rootMediaId: LiveData<String> =
+        Transformations.map(musicServiceConnection.isConnected) { isConnected ->
+            if (isConnected) {
+                //call prepare to load the last song that was played
+
+              preparePlayer()
+
+
+                musicServiceConnection.rootMedia
+
+            } else {
+                null
+            }
+        }
+
+    /**
+     * [preparePlayer]
+     */
+    private fun preparePlayer() {
+        val playbackState = musicServiceConnection.playbackState.value
+        if (!playbackState!!.isPrepared) musicServiceConnection.transportControl.prepare()
+
+
+    }
 
     /**
      * When the session's [PlaybackStateCompat] changes, the [mediaItems] need to be updated
@@ -179,7 +203,7 @@ class MainActivityViewModel(
         if (mediaMetadata.duration != 0L && mediaMetadata.id != null) {
             val nowPlayingMetadata = NowPlayingMetadata(
                 mediaMetadata.id!!,
-               mediaMetadata.albumArtUri,
+                mediaMetadata.albumArtUri,
                 mediaMetadata.title?.trim(),
                 mediaMetadata.displaySubtitle?.trim(),
                 NowPlayingMetadata.timestampToMSS(app, mediaMetadata.duration)
