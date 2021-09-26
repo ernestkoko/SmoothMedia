@@ -71,8 +71,9 @@ class MainActivityViewModel(
         Transformations.map(musicServiceConnection.isConnected) { isConnected ->
             if (isConnected) {
                 //call prepare to load the last song that was played
+                    musicServiceConnection.subscribe("/", subscriptionCallBack)
 
-              preparePlayer()
+                preparePlayer()
 
 
                 musicServiceConnection.rootMedia
@@ -82,6 +83,14 @@ class MainActivityViewModel(
             }
         }
 
+    val subscriptionCallBack= object: MediaBrowserCompat.SubscriptionCallback(){
+        override fun onChildrenLoaded(
+            parentId: String,
+            children: MutableList<MediaBrowserCompat.MediaItem>
+        ) {
+            Log.i(TAG, "children: $children")
+        }
+    }
     /**
      * [preparePlayer]
      */
@@ -173,6 +182,7 @@ class MainActivityViewModel(
 
     fun previous() {
         _animatePreviousButton.value = true
+
         musicServiceConnection.transportControl.skipToPrevious()
     }
 
@@ -198,7 +208,7 @@ class MainActivityViewModel(
         playbackState: PlaybackStateCompat,
         mediaMetadata: MediaMetadataCompat
     ) {
-
+        Log.i(TAG, "updateState: called: Duration: ${mediaMetadata.duration}")
         // Only update media item once we have duration available
         if (mediaMetadata.duration != 0L && mediaMetadata.id != null) {
             val nowPlayingMetadata = NowPlayingMetadata(
@@ -214,8 +224,8 @@ class MainActivityViewModel(
         // Update the media button resource ID
         mediaButtonRes.postValue(
             when (playbackState.isPlaying) {
-                true -> R.drawable.ic_pause_black_24dp
-                else -> R.drawable.ic_play_arrow_black_24dp
+                true -> R.drawable.ic_pause_notification
+                else -> R.drawable.ic_play_notification
             }
         )
     }

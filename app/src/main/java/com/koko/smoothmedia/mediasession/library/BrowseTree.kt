@@ -36,7 +36,8 @@ class BrowseTree(
     val recentMediaId: String? = null
 ) {
     private val mediaIdToChildren = mutableMapOf<String, MutableList<MediaMetadataCompat>>()
-
+    private val albumListOfMap = mutableListOf<Map<String, MediaMetadataCompat>>()
+    private lateinit var albumsUniqueNames: MutableList<String>
 
     init {
         Log.i(TAG, "BrowseTree Init: Called")
@@ -51,8 +52,20 @@ class BrowseTree(
 
         }
         Log.i(TAG, "All Songs: ${rootList}")
-        mediaIdToChildren[SMOOTH_ALBUMS_ROOT] = rootList.buildAlbums().toMutableList()
         mediaIdToChildren[SMOOTH_BROWSABLE_ROOT] = rootList
+        mediaIdToChildren[SMOOTH_ALBUMS_ROOT] = rootList.buildAlbums().toMutableList()
+        albumsUniqueNames.map {
+
+            Log.i(
+                TAG,
+                "IT: $it, Map: ${albumListOfMap.loopThroughListOfMapAndReturnMatchingItems(it)}"
+            )
+            mediaIdToChildren[it] = albumListOfMap.loopThroughListOfMapAndReturnMatchingItems(it)
+        }
+
+
+        Log.i(TAG, "Key: ${mediaIdToChildren.keys}")
+        // mediaIdToChildren[albumsUniqueNames.getAStringFromStringList()]
     }
 
     /**
@@ -84,43 +97,9 @@ class BrowseTree(
         Log.i(TAG, "buildAlbumChildren(): Called")
         //get the all the album names including duplicate
         val albumNames = this.map { it.album }
-        val albumsUniqueNames = albumNames.getAlbumsUniqueNames()
+        //initialise the list of album names
+        albumsUniqueNames = albumNames.getAlbumsUniqueNames()
         return this.getAlbumMediaMetadataList(albumsUniqueNames)
-    }
-
-    /**
-     * Check if a string is contained in a list of metadata.
-     */
-    private fun MutableList<MediaMetadataCompat>.contains(string: String?): Boolean {
-        val names = this.map {
-            it.album
-        }
-        return names.contains(string)
-
-    }
-
-    /**
-     * get the list of album media metadata
-     */
-    private fun MutableList<MediaMetadataCompat>.getAlbumMediaMetadataList(specialListOfNames: MutableList<String>):
-            MutableList<MediaMetadataCompat> {
-        val albumMediaMetadataList = mutableListOf<MediaMetadataCompat>()
-        mapIndexed { index, mediaMetadataCompat ->
-            if (specialListOfNames.contains(mediaMetadataCompat.album) &&
-                !albumMediaMetadataList.contains(mediaMetadataCompat.album)
-            ) {
-                val item = MediaMetadataCompat.Builder().apply {
-                    id = index.toString()
-                    album = mediaMetadataCompat.album
-                    title = mediaMetadataCompat.title
-                    albumArtUri = mediaMetadataCompat.albumArtUri.toString()
-                    flag = MediaItem.FLAG_BROWSABLE
-                }.build()
-                albumMediaMetadataList.add(item)
-            }
-
-        }
-        return albumMediaMetadataList
     }
 
     /**
@@ -142,6 +121,157 @@ class BrowseTree(
 
         }
         return specialListOfNames
+    }
+
+
+    /**
+     * get the list of album media metadata
+     */
+    private fun MutableList<MediaMetadataCompat>.getAlbumMediaMetadataList(
+        specialListOfNames:
+        MutableList<String>
+    ): MutableList<MediaMetadataCompat> {
+
+        //list of media metadata to return
+        val albumMediaMetadataList = mutableListOf<MediaMetadataCompat>()
+
+        //loop through the list of media metadata
+        this.mapIndexed { index, mediaMetadataCompat ->
+            val listIterator = albumMediaMetadataList.listIterator()
+            val mySet = mutableSetOf<MediaMetadataCompat>()
+            if (specialListOfNames.contains(mediaMetadataCompat.album) &&
+                !albumMediaMetadataList.containsAlbumName(mediaMetadataCompat.album)
+            ) {
+                Log.i(TAG, "getAlbumMediaMetadataList: FirstCondition")
+
+                val item = MediaMetadataCompat.Builder()
+                    .apply {
+                        id = index.toString()
+                        album = mediaMetadataCompat.album
+
+                        title = mediaMetadataCompat.itemCount.plus(1).toString()
+                        itemCount = mediaMetadataCompat.itemCount.plus(1)
+                        albumArtUri = mediaMetadataCompat.albumArtUri.toString()
+                        downloadStatus = mediaMetadataCompat.itemCount.plus(1)
+                        flag = MediaItem.FLAG_BROWSABLE
+
+                    }.build()
+                item.description.extras?.putLong(METADATA_KEY_ITEM_COUNT, 1)
+
+                albumMediaMetadataList.add(item)
+                mySet.add(item)
+            }
+            /* if the given list contains the album name and the lis we are populating contains the same media
+            * album name */
+            else {
+                Log.i(TAG, "getAlbumMediaMetadataList: SecondCondition")
+                /*  loop through the list we are populating and modify the item using iterator  */
+
+
+
+
+
+                Log.i(TAG, "getAlbumMediaMetadataList: SecondCondition: albumSame")
+
+
+
+
+                for((index, item) in listIterator.withIndex()){
+                    if(item.album == mediaMetadataCompat.album){
+                        Log.i(TAG, "AlbumSame")
+                        Log.i(TAG, "AlbumSame : Count: ${item.itemCount}")
+                        val newMetadata = MediaMetadataCompat.Builder().apply {
+                            id = index.toString()
+                            album = mediaMetadataCompat.album
+                            title = item.itemCount .plus(1).toString()
+                            itemCount = item.itemCount .plus(1)
+                            downloadStatus = item.itemCount.plus(1)
+                            albumArtUri = mediaMetadataCompat.albumArtUri.toString()
+                            flag = MediaItem.FLAG_BROWSABLE
+                        }.build()
+                        mediaMetadataCompat.description.extras?.putLong(
+                            METADATA_KEY_ITEM_COUNT,
+                            mediaMetadataCompat.itemCount + 1
+                        )
+                        Log.i(TAG, "AlbumSame : Count: ${newMetadata.itemCount}")
+                        //modify the metadata
+                        listIterator.set(newMetadata)
+
+                    }
+
+                }
+
+
+                // albumMediaMetadataList.add(index, newMetadata)
+
+
+            }
+
+
+            //check for the unique names and add them to their respective album
+            if (specialListOfNames.contains(mediaMetadataCompat.album)) {
+
+                albumListOfMap.add(mapOf(mediaMetadataCompat.album!! to mediaMetadataCompat))
+
+            }
+
+
+        }
+        albumMediaMetadataList.map {
+            Log.i(
+                TAG, "Final: ${it.itemCount}:" +
+                        "NAme: ${it.title}"
+            )
+        }
+        return albumMediaMetadataList
+    }
+
+    private fun MutableListIterator<MediaMetadataCompat>.containsString(s: String): Boolean {
+        val list = this.asSequence().toMutableList()
+        return list.containsAlbumName(s)
+    }
+
+    /**
+     * check if a string is contained in a list of strings and returns the contained string if true
+     */
+    private fun MutableList<String>.getAStringFromStringList(str: String): String {
+        var newString = ""
+        this.map {
+            if (it == str) {
+                newString = it
+            }
+        }
+        return newString
+    }
+
+
+    /**
+     * Loop through the list of maps of albums and return the [MediaMetadataCompat]s that have matching
+     * keys with [albumName]
+     */
+    private fun MutableList<Map<String, MediaMetadataCompat>>.loopThroughListOfMapAndReturnMatchingItems(
+        albumName: String
+    ): MutableList<MediaMetadataCompat> {
+        val list = mutableListOf<MediaMetadataCompat>()
+        this.map {
+            if (it.containsKey(albumName)) {
+                list.add(it.getValue(albumName))
+            }
+
+        }
+        Log.i(TAG, "loopThroughListOfMapAndReturnMatchingItems: List: ${list[0].album}")
+        return list
+    }
+
+    /**
+     * Check if a string is contained in a list of metadata.
+     */
+    private fun MutableList<MediaMetadataCompat>.containsAlbumName(string: String?): Boolean {
+        val names = this.map {
+            it.album
+        }
+        return names.contains(string)
+
     }
 
 

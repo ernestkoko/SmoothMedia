@@ -127,7 +127,9 @@ class SongLoader {
                             false,
                             albumArtUri,
                             albumName,
+                            0,
                             artistId,
+
                             artistName
                         )
                         songs.add(song)
@@ -155,7 +157,9 @@ fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {
     album = song.albumName
     duration = song.duration
     artist = song.artistName
+    itemCount = song.itemCount
     albumArtUri = song.albumArtUri.toString()
+
     downloadStatus = MediaDescriptionCompat.STATUS_NOT_DOWNLOADED
     return this
 

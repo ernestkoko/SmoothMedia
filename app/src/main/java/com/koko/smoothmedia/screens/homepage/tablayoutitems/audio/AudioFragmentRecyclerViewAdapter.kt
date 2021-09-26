@@ -2,6 +2,7 @@ package com.koko.smoothmedia.screens.homepage.tablayoutitems.audio
 
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -33,7 +34,21 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
     /**
      * [onBindViewHolder] triggers to bind the view
      */
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int
+    ) {
+
+        onBindViewHolder(holder, position)
+
+
+    }
+
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
         val data = getItem(position)
         when (holder) {
             is SongViewHolder -> {
@@ -42,7 +57,6 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
 
             }
         }
-
     }
 
     /**
@@ -58,7 +72,6 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
             withContext(Dispatchers.Main) {
 
                 submitList(items!!.toList())
-
 
 
             }
@@ -79,7 +92,10 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
          */
         fun bind(song: Song, clickListener: OnClickListener) {
             binding.song = song
+
             binding.clickListener = clickListener
+           binding.imageView=  binding.moreIcon
+
             binding.executePendingBindings()
 
         }
@@ -98,12 +114,19 @@ class AudioFragmentRecyclerViewAdapter(val clickListener: OnClickListener) :
 
     }
 
+
     /**
      * [OnClickListener] is a class that has a call back [clickListener] that will be triggered
      * when an item(song) is clicked in the recycler view
      */
-    class OnClickListener(val clickListener: (song: Song) -> Unit) {
+    class OnClickListener(
+        val menuClickListener: (song: Song,view: View) -> Unit,
+        val clickListener: (song: Song) -> Unit
+    ) {
+        /* This handles clicking a list item */
         fun onClick(song: Song) = clickListener(song)
+        /* This handles clicking a "more" view for menu in the list item */
+        fun onMenuItemClick(song: Song, v: View) = menuClickListener(song, v)
     }
 }
 
@@ -114,19 +137,20 @@ class SongDiffCallback : DiffUtil.ItemCallback<Song>() {
     private val TAG = "SongDiffCallback"
 
 
-
     override fun areItemsTheSame(oldItem: Song, newItem: Song): Boolean {
+        Log.i(TAG, "AreCItemsTheSame")
         return oldItem.id == newItem.id
     }
 
     override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean {
+        Log.i(TAG, "AreContentTheSame")
 
-        return  oldItem == newItem
+        return oldItem.id == newItem.id && oldItem.isPlaying == newItem.isPlaying
     }
 
     override fun getChangePayload(oldItem: Song, newItem: Song): Any? {
-
-        return newItem.isPlaying
+        Log.i(TAG, "getChangePayload")
+        return if (oldItem.isPlaying != newItem.isPlaying) true else null
 
     }
 

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/view_pager">
+
+    <fragment
+        android:id="@+id/view_pager"
+        android:name="com.koko.smoothmedia.screens.homepage.ViewPagerFragment"
+        android:label="@string/app_name"
+        tools:layout="@layout/fragment_view_pager"
+        app:startDestination="@id/action_view_pager_to_permissionFragment">
+        <action
+            android:id="@+id/action_view_pager_to_permissionFragment"
+            app:destination="@id/permissionFragment"
+            app:popUpTo="@id/permissionFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_view_pager_to_appSettingsFragment"
+            app:destination="@id/appSettingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/permissionFragment"
+        android:name="com.koko.smoothmedia.screens.homepage.permissions.PermissionFragment"
+        android:label="permission fragment"
+        tools:layout="@layout/fragment_permission" >
+        <action
+            android:id="@+id/action_permissionFragment_to_view_pager"
+            app:destination="@id/view_pager"
+            app:popUpTo="@id/permissionFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/appSettingsFragment"
+        android:name="com.koko.smoothmedia.AppSettingsFragment"
+        android:label="fragment_app_settings"
+        tools:layout="@layout/fragment_app_settings" />
+</navigation>

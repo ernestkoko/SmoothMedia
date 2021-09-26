@@ -4,9 +4,10 @@ buildscript {
         kotlin_version = '1.5.21'
         exo_player_version = '2.15.0'
         multidex_version = "2.0.1"
-        navigation_version="2.3.5"
+        navigation_version= '2.3.5'
         constraint_layout_version= '2.1.0'
         material_design= '1.4.0'
+        room_version = "2.3.0"
         view_pager2_version="1.0.0"
 
     }

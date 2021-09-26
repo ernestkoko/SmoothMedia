@@ -5,12 +5,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.koko.smoothmedia.R
 import com.koko.smoothmedia.databinding.FragmentHomeScreenBinding
+import com.koko.smoothmedia.dataclass.Song
 import com.koko.smoothmedia.utils.InjectorUtils
 
 //import com.koko.smoothmedia.mediasession.services.AudioService
@@ -50,6 +53,7 @@ class AudioFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.rootMediaId.observe(viewLifecycleOwner, { rootMediaId ->
+            Log.i(TAG, "$rootMediaId: RootMediaId")
             rootMediaId?.let {
                 Log.i(TAG, "$rootMediaId: RootMediaId")
                 viewModel.subscribe(rootMediaId)
@@ -73,9 +77,16 @@ class AudioFragment : Fragment() {
 
         //initialise the adapter
         mMyAdapter = AudioFragmentRecyclerViewAdapter(
-            AudioFragmentRecyclerViewAdapter.OnClickListener {
-                viewModel.onSongClicked(it)
-            }
+            AudioFragmentRecyclerViewAdapter.OnClickListener(
+                menuClickListener = { song, v ->
+
+                    listItemMenu(song, v)
+                },
+                clickListener = {
+                    viewModel.onSongClicked(it)
+                })
+
+
         )
         //set the layout manager and adapter for the Recycler view
         binding!!.songsListView.layoutManager = LinearLayoutManager(context)
@@ -91,6 +102,42 @@ class AudioFragment : Fragment() {
                 mMyAdapter.submitSongsList(it)
             }
         })
+    }
+
+    /**
+     * function for inflating the popup menu and setting the click listener for each item click
+     */
+    private fun listItemMenu(song: Song, view: View) {
+        Log.i(TAG, "PopUpMenu: called")
+        val popupmenu = PopupMenu(this.requireContext(), view)
+        popupmenu.inflate(R.menu.list_item_more_menu)
+        //popupmenu.menu.add("Text")
+        popupmenu.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.add_to_playlist -> {
+                    Log.i(TAG, "Add to Playlist clicked")
+                    Toast.makeText(requireContext(), "Add to playlist: Clicked", Toast.LENGTH_LONG)
+                        .show()
+                    true
+                }
+                R.id.play_song -> {
+                    Log.i(TAG, "Play song: Clicked")
+                    Toast.makeText(requireContext(), "Play Song: Clicked", Toast.LENGTH_LONG)
+                        .show()
+                    //play the song
+                    viewModel.onSongClicked(song)
+                    true
+                }
+                else -> true
+            }
+        }
+        popupmenu.show()
+        val popup = popupmenu::class.java.getDeclaredField("mPopup")
+        popup.isAccessible = true
+        val menu = popup.get(popupmenu)
+        menu.javaClass.getDeclaredMethod("setForceShowIcon", Boolean::class.java).invoke(menu, true)
+
+
     }
 
 

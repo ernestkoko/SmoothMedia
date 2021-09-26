@@ -6,21 +6,50 @@
         app:constraintSetStart="@id/start"
         app:duration="1000"
         app:motionInterpolator="linear">
-        <!--        <OnSwipe-->
-        <!--            app:dragDirection="dragUp"-->
-        <!--            app:touchAnchorId="@id/reference_container"-->
-        <!--            app:touchAnchorSide="bottom" />-->
-        <OnClick
-            app:clickAction="toggle"
-            app:targetId="@id/reference_container" />
+
+        <OnSwipe
+            app:limitBoundsTo="@id/reference_container"
+            app:touchAnchorSide="top"
+            app:touchRegionId="@id/reference_container" />
+
+
         <KeyFrameSet>
             <KeyPosition
-                app:percentX="0"
-                app:percentY="50"
-                app:framePosition="25"
+                app:framePosition="1"
                 app:motionTarget="@id/previous_button"
+                app:percentX="1.0"
+
+                app:percentY="1.0" />
+            <KeyPosition
+                app:framePosition="1"
+
+                app:motionTarget="@id/next_button"
+
+                app:percentX="1.0"
+                app:percentY="1.0" />
+            <KeyPosition
+                app:motionTarget="@id/reference_container"
+                app:framePosition="10"
+                app:percentY="50"
+
                 />
+            <KeyPosition
+                app:framePosition="100"
+                app:motionTarget="@id/nav_host_fragment"
+                app:percentX="1" />
+            <KeyAttribute
+                app:framePosition="100"
+                app:motionTarget="@id/play_pause_button"
+                android:scaleX="2.0"
+                android:scaleY="2.0"
+                android:rotation="-360"
+                />
+
+
         </KeyFrameSet>
+
+
+
 
     </Transition>
 
@@ -29,9 +58,9 @@
             android:id="@id/reference_container"
             android:layout_width="0dp"
             android:layout_height="50dp"
+            android:layout_marginStart="12dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:layout_marginStart="12dp"
 
 
             android:alpha="0.0"
@@ -40,6 +69,14 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/play_pause_button"
             app:layout_constraintStart_toStartOf="parent" />
+        <Constraint
+            android:id="@id/nav_host_fragment"
+
+            android:visibility="visible" />
+        <Constraint
+            android:id="@id/app_bar_layout"
+            android:layout_width="match_parent" />
+
         <Constraint
             android:id="@id/album_image"
             android:layout_width="50dp"
@@ -57,7 +94,6 @@
             android:layout_marginEnd="12dp"
 
 
-
             app:layout_constraintEnd_toStartOf="@id/play_pause_button"
             app:layout_constraintStart_toEndOf="@id/album_image"
             app:layout_constraintTop_toTopOf="@id/reference_container" />
@@ -65,9 +101,8 @@
             android:id="@id/play_pause_button"
             android:layout_width="50dp"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
+
             android:layout_marginEnd="10dp"
-            android:layout_marginBottom="8dp"
 
 
 
@@ -76,13 +111,23 @@
             app:layout_constraintTop_toTopOf="@id/reference_container" />
         <Constraint
             android:id="@id/next_button"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
 
-            android:visibility="gone" />
+            app:layout_constraintTop_toTopOf="parent" />
         <Constraint
             android:id="@id/previous_button"
             android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+        <Constraint
+            android:id="@+id/nav_host_fragment"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/reference_container"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/app_bar_layout" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end">
@@ -91,14 +136,19 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:alpha="0.0"
+            app:layout_constraintVertical_bias="1.2"
+
 
 
             app:layout_constraintBottom_toTopOf="@id/play_pause_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/app_bar_layout" />
 
+        <Constraint
+            android:id="@id/nav_host_fragment"
 
+            android:visibility="invisible" />
         <Constraint
             android:id="@id/song_title"
             android:layout_width="0dp"
@@ -125,32 +175,44 @@
             android:id="@id/album_image"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginEnd="16dp"
             android:layout_marginStart="16dp"
-            app:layout_constraintEnd_toEndOf="@id/reference_container"
+            android:layout_marginEnd="16dp"
             app:layout_constraintBottom_toTopOf="@id/play_pause_button"
+            app:layout_constraintEnd_toEndOf="@id/reference_container"
             app:layout_constraintStart_toStartOf="@id/reference_container"
             app:layout_constraintTop_toBottomOf="@id/song_subtitle" />
         <Constraint
             android:id="@id/play_pause_button"
-            android:layout_width="50dp"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="12dp"
+
+
+            android:layout_marginBottom="20dp"
+            app:flow_horizontalAlign="center"
+            app:layout_constraintDimensionRatio="h,1:1"
+            app:flow_verticalAlign="center"
+            android:scaleY="2"
+            android:scaleX="2"
+
             android:visibility="visible"
-            app:layout_constraintTop_toTopOf="@id/next_button"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+
+
+            app:layout_constraintTop_toTopOf="@id/previous_button" />
         <Constraint
             android:id="@id/next_button"
             android:layout_width="50dp"
             android:layout_height="0dp"
-            android:layout_marginBottom="12dp"
+            app:flow_horizontalAlign="center"
+            app:flow_verticalAlign="center"
+            app:layout_constraintDimensionRatio="@string/play_pause_button"
 
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="@id/play_pause_button"
+
+            app:layout_constraintBottom_toBottomOf="@id/play_pause_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/play_pause_button"
 
@@ -160,9 +222,12 @@
             android:id="@id/previous_button"
             android:layout_width="50dp"
             android:layout_height="0dp"
-            android:layout_marginBottom="12dp"
+            app:layout_constraintDimensionRatio="@string/play_pause_button"
+
+            app:flow_horizontalAlign="center"
+            app:flow_verticalAlign="center"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/play_pause_button"
             app:layout_constraintEnd_toStartOf="@id/play_pause_button"
             app:layout_constraintStart_toStartOf="parent" />
     </ConstraintSet>

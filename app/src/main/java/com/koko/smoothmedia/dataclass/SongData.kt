@@ -29,15 +29,17 @@ data class SongData(
         }
     }
 }
-
-data class MediaItemData(
-    val mediaId: String,
-    val title: String,
-    val subtitle: String,
-    val albumArtUri: Uri,
-    val browsable: Boolean,
-    var playbackRes: Int
-)
+/**
+ * data class for metadata that is browsable
+ */
+//data class MediaItemData(
+//    val mediaId: String,
+//    val title: String,
+//    val subtitle: String,
+//    val albumArtUri: Uri,
+//    val browsable: Boolean,
+//    var playbackRes: Int
+//)
 
 /**
  * if [isPlaying] is 0 it means it is not playing but when it is 1 it is playing
@@ -56,6 +58,9 @@ data class Song(
     val isPlaying:Boolean? =false,
     val albumArtUri: Uri? =null,
     val albumName: String = "",
+    val itemCount: Long=0,
     val artistId: Long = -1,
     val artistName: String = ""
 )
+
+

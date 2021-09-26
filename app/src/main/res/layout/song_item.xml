@@ -10,6 +10,10 @@
             type="com.koko.smoothmedia.dataclass.Song" />
 
         <variable
+            name="imageView"
+            type="android.widget.ImageView" />
+
+        <variable
             name="clickListener"
             type="com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragmentRecyclerViewAdapter.OnClickListener" />
 
@@ -29,8 +33,8 @@
             android:layout_height="0dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/exo_rounded_rectangle"
-            android:scaleType="centerCrop"
             android:contentDescription="@string/song_photo"
+            android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="w,1:1"
             app:layout_constraintStart_toStartOf="parent"
@@ -74,16 +78,31 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.8" />
+            app:layout_constraintGuide_percent="0.80" />
 
         <TextView
             android:id="@+id/isPlayingText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:maxLines="1"
+            app:duration="@{song}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/more_icon"
+            app:layout_constraintStart_toEndOf="@+id/songTitleItem"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/more_icon"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="8dp"
+
+            android:onClick="@{()->clickListener.onMenuItemClick(song, imageView)}"
+            android:src="@drawable/ic_more"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:isPlaying="@{song}"
-            app:layout_constraintStart_toEndOf="@+id/songTitleItem"
+            app:layout_constraintStart_toEndOf="@id/isPlayingText"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

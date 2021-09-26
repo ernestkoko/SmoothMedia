@@ -14,6 +14,8 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.koko.smoothmedia.R
 import com.koko.smoothmedia.dataclass.Song
+import com.koko.smoothmedia.screens.homepage.tablayoutitems.audio.AudioFragmentRecyclerViewAdapter.*
+import java.util.concurrent.TimeUnit
 
 /**
  * [setTitle] sets the text  of the [TextView] to the title of the song [item]
@@ -36,6 +38,12 @@ fun TextView.setArtistName(item: Song?) {
         text = it.artistName
     }
 }
+@BindingAdapter("numOSongs")
+fun TextView.setNumOfSongs(item: Song?) {
+    item?.let {
+        text = it.itemCount.toString() +"songs"
+    }
+}
 
 @BindingAdapter("songImage")
 fun ImageView.setSongImage(item: Song?) {
@@ -46,16 +54,27 @@ fun ImageView.setSongImage(item: Song?) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.M)
-@BindingAdapter("isPlaying")
+
+@BindingAdapter("duration")
 fun TextView.setIsPlaying(item: Song?){
+
     item?.let{
-        if(it.isPlaying!!){
-            Log.i("Adapter: ", "It's true: ID: ${it.id}: ")
-            text= "isPlaying"
-            setTextColor(resources.getColor(R.color.design_default_color_primary,null))
-        }
+        val time = item.duration/1000/60
+        val seconds = (item.duration/1000 % 60)
+        text = "$time:$seconds"
+//        if(it.isPlaying!!){
+//            Log.i("Adapter: ", "It's true: ID: ${it.id}: ")
+//            text= "isPlaying"
+//            setTextColor(resources.getColor(R.color.design_default_color_primary,null))
+//        }
     }
+}
+@BindingAdapter("itemPopupMenu")
+fun ImageView.setClickListener(onclick: OnClickListener){
+    this.setOnClickListener {
+
+    }
+
 }
 @BindingAdapter("theImage")
 fun ImageView.manageImage(uri: Uri?) {

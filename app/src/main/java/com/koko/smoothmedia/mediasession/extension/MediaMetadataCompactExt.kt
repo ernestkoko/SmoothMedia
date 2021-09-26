@@ -99,9 +99,8 @@ inline val MediaMetadataCompat.mediaUri: Uri
 
 inline val MediaMetadataCompat.downloadStatus
     get() = getLong(MediaMetadataCompat.METADATA_KEY_DOWNLOAD_STATUS)
-
-
-
+inline val MediaMetadataCompat.itemCount: Long
+    get() = this.getLong(METADATA_KEY_ITEM_COUNT)
 
 
 /**
@@ -120,12 +119,19 @@ inline val MediaMetadataCompat.flag
 const val NO_GET = "Property does not have a 'get'"
 
 
-
 inline var MediaMetadataCompat.Builder.id: String
     @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
     get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
     set(value) {
         putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, value)
+    }
+inline var MediaMetadataCompat.Builder.itemCount: Long
+    @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
+    get() = throw IllegalAccessException("Cannot get from MediaMetadataCompact.Builder")
+    set(value) {
+        putLong(METADATA_KEY_ITEM_COUNT, value)
+
+
     }
 
 inline var MediaMetadataCompat.Builder.title: String?
@@ -282,4 +288,6 @@ fun List<MediaMetadataCompat>.toMediaSource(
  * Custom property that holds whether an item is [MediaItem.FLAG_BROWSABLE] or
  * [MediaItem.FLAG_PLAYABLE].
  */
-const val METADATA_KEY_SMOOTHMEDIA_FLAGS = "com.example.android.uamp.media.METADATA_KEY_UAMP_FLAGS"
+const val METADATA_KEY_SMOOTHMEDIA_FLAGS =
+    "com.example.android.smooth.media.METADATA_KEY_UAMP_FLAGS"
+const val METADATA_KEY_ITEM_COUNT = "metadata_key_item_count"

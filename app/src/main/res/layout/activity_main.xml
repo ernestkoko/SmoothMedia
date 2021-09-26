@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
 
     <data>
 
@@ -12,125 +11,162 @@
 
     </data>
 
-
-    <androidx.constraintlayout.motion.widget.MotionLayout
-        android:id="@+id/motion_layout"
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutDescription="@xml/activity_main_scene">
+        android:fitsSystemWindows="true">
 
-        <FrameLayout
-            android:id="@+id/nav_host_fragment"
+        <androidx.constraintlayout.motion.widget.MotionLayout
+            android:id="@+id/motion_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutDescription="@xml/activity_main_scene">
 
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            <com.google.android.material.appbar.AppBarLayout
+                android:id="@+id/app_bar_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
 
-            app:layout_constraintBottom_toTopOf="@id/reference_container"
-
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-
-
-        <TextView
-            android:id="@+id/song_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:maxLines="1"
-            android:text="Song Title"
-            android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent">
 
 
-            app:layout_constraintStart_toStartOf="@id/reference_container"
-            app:layout_constraintTop_toTopOf="@id/reference_container" />
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
 
-        <TextView
-            android:id="@+id/song_subtitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@id/song_subtitle"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
+                    android:background="?attr/colorPrimary" />
 
-            android:layout_marginBottom="16dp"
-            android:maxLines="1"
-            android:text="Sub Title"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="@id/reference_container"
-            app:layout_constraintEnd_toEndOf="@+id/song_title"
-
-            app:layout_constraintStart_toStartOf="@id/song_title"
-            app:layout_constraintTop_toBottomOf="@+id/song_title" />
-
-        <ImageView
-            android:id="@+id/play_pause_button"
-            android:layout_width="30dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-
-            android:background="@color/design_default_color_primary_dark"
-            android:contentDescription="@string/play_pause_button"
-            android:onClick="@{()-> mainActivityViewModel.playPauseFun()}"
-            android:src="@drawable/exo_controls_play"
-            app:layout_constraintBottom_toBottomOf="@id/reference_container"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/reference_container" />
-
-        <ImageView
-            android:id="@+id/next_button"
-            android:layout_width="30dp"
-            android:layout_height="0dp"
-            android:background="@color/design_default_color_primary_dark"
-            android:contentDescription="@string/next_button"
-            android:onClick="@{()-> mainActivityViewModel.next()}"
-            android:src="@drawable/exo_controls_next"
-            android:visibility="gone"
-
-            />
-
-        <ImageView
-            android:id="@+id/previous_button"
-            android:layout_width="30dp"
-            android:layout_height="0dp"
-            android:background="@color/design_default_color_primary_dark"
-            android:contentDescription="@string/previous_button"
-            android:onClick="@{()-> mainActivityViewModel.previous()}"
-            android:src="@drawable/exo_controls_previous"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-
-            />
-
-        <ImageView
-            android:id="@+id/album_image"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:adjustViewBounds="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            </com.google.android.material.appbar.AppBarLayout>
 
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/reference_container"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="#99aaff"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/play_pause_button"
-            app:layout_constraintStart_toStartOf="parent" />
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/nav_host_fragment"
+                android:name="androidx.navigation.fragment.NavHostFragment"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:defaultNavHost="true"
+                app:layout_constraintBottom_toBottomOf="@id/reference_container"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/app_bar_layout"
+                app:navGraph="@navigation/main_nav_graph" />
 
 
-    </androidx.constraintlayout.motion.widget.MotionLayout>
+            <TextView
+                android:id="@+id/song_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:maxLines="1"
+                android:text="Song Title"
+                android:textStyle="bold"
+
+
+                app:layout_constraintStart_toStartOf="@id/reference_container"
+                app:layout_constraintTop_toTopOf="@id/reference_container" />
+
+            <TextView
+                android:id="@+id/song_subtitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@id/song_subtitle"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+
+                android:layout_marginBottom="16dp"
+                android:maxLines="1"
+                android:text="Sub Title"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="@id/reference_container"
+                app:layout_constraintEnd_toEndOf="@+id/song_title"
+
+                app:layout_constraintStart_toStartOf="@id/song_title"
+                app:layout_constraintTop_toBottomOf="@+id/song_title" />
+
+            <ImageView
+                android:id="@+id/play_pause_button"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"
+
+                android:background="@drawable/round_background"
+                android:contentDescription="@string/play_pause_button"
+                android:onClick="@{()-> mainActivityViewModel.playPauseFun()}"
+                android:src="@drawable/ic_play_notification"
+                app:layout_constraintBottom_toBottomOf="@id/reference_container"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/reference_container" />
+
+            <ImageView
+                android:id="@+id/next_button"
+                android:layout_width="30dp"
+                android:layout_height="0dp"
+                android:background="@color/design_default_color_primary_dark"
+                android:contentDescription="@string/next_button"
+                android:onClick="@{()-> mainActivityViewModel.next()}"
+
+                android:src="@drawable/exo_controls_next"
+                android:visibility="gone"
+
+                />
+
+            <ImageView
+                android:id="@+id/previous_button"
+                android:layout_width="30dp"
+                android:layout_height="0dp"
+                android:background="@color/design_default_color_primary_dark"
+                android:contentDescription="@string/previous_button"
+                android:onClick="@{()-> mainActivityViewModel.previous()}"
+
+                android:src="@drawable/exo_controls_previous"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+
+                />
+
+            <ImageView
+                android:id="@+id/album_image"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:adjustViewBounds="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/reference_container"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="#99aaff"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/play_pause_button"
+                app:layout_constraintStart_toStartOf="parent" />
+
+
+        </androidx.constraintlayout.motion.widget.MotionLayout>
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:fitsSystemWindows="true"
+            app:menu="@menu/main_menu" />
+
+
+    </androidx.drawerlayout.widget.DrawerLayout>
 </layout>

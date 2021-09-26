@@ -12,6 +12,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
@@ -43,7 +44,6 @@ import kotlinx.coroutines.*
 class AudioService : MediaBrowserServiceCompat() {
     val TAG = "AudioService"
     //private lateinit var currentPlayer: Player
-
     // private lateinit var mediaSource: MusicSource
     private lateinit var notificationManager: SmoothNotificationManager
 
@@ -128,7 +128,6 @@ class AudioService : MediaBrowserServiceCompat() {
         serviceScope.launch {
             mediaSource.load(applicationContext)
         }
-
 
 
         //display the notification
@@ -229,7 +228,7 @@ class AudioService : MediaBrowserServiceCompat() {
         Log.i(TAG, "onLoadChildren: Called  $parentId: Root")
 
         val mediaItems = mutableListOf<MediaItem>()
-        if (parentId == "/" || parentId == SMOOTH_ALBUMS_ROOT) {
+       // if (parentId == "/" || parentId == SMOOTH_ALBUMS_ROOT || parentId == "bluetooth") {
             Log.i(TAG, "$parentId: Root(/)")
             /* Wait for the list of songs to be ready before sending it to the caller */
             mediaSource.whenReady { successful ->
@@ -237,9 +236,9 @@ class AudioService : MediaBrowserServiceCompat() {
                     val children = browseTree[parentId]?.map { item ->
                         MediaItem(item.description, item.flag)
                     }?.toMutableList()
-                    currentPlaylistItems = browseTree[parentId]?.map {
-                        it
-                    }!!
+//                    currentPlaylistItems = browseTree[parentId]?.map {
+//                        it
+//                    }!!
 
 
                     /**
@@ -248,9 +247,9 @@ class AudioService : MediaBrowserServiceCompat() {
                     result.sendResult(children)
                 }
             }
-        } else {
-            result.sendResult(mediaItems)
-        }
+//        } else {
+//            result.sendResult(mediaItems)
+//        }
 
 
     }
@@ -307,11 +306,11 @@ class AudioService : MediaBrowserServiceCompat() {
         playWhenReady: Boolean,
         playbackStartPositionMs: Long
     ) {
-        Log.i(TAG, "preparePlaylist: Called")
+        Log.i(TAG, "preparePlaylist: Called: List: $metadataList")
         val initialWindowIndex = if (itemToPlay == null) 0 else metadataList.indexOf(itemToPlay)
         currentPlaylistItems = metadataList
         exoPlayer.playWhenReady = playWhenReady
-       //build a [ConcatenatingMediaSource]
+        //build a [ConcatenatingMediaSource]
         val mediaSource = metadataList.toMediaSource(dataSourceFactory)
 
         exoPlayer.setMediaSource(mediaSource)
@@ -374,6 +373,7 @@ class AudioService : MediaBrowserServiceCompat() {
     ) : TimelineQueueNavigator(mediaSession) {
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
             currentPlaylistItems[windowIndex].description
+
     }
 
     /**
@@ -450,7 +450,7 @@ class AudioService : MediaBrowserServiceCompat() {
          */
 
         private fun buildPlayList(itemToPlay: MediaMetadataCompat): List<MediaMetadataCompat> =
-            mediaSource.filter { it.album == itemToPlay.album }.sortedBy { it.trackNumber }
+            mediaSource.reversed().reversed()
 
 
         override fun onPrepareFromSearch(query: String, playWhenReady: Boolean, extras: Bundle?) {
@@ -469,7 +469,7 @@ class AudioService : MediaBrowserServiceCompat() {
      */
     private inner class PlayerEventListener : Player.Listener {
         override fun onMetadata(metadata: Metadata) {
-            super.onMetadata(metadata)
+
 
         }
 
@@ -498,7 +498,7 @@ class AudioService : MediaBrowserServiceCompat() {
                         "Player.Listener.onPlaybackStateChanged: Called, Hide STATE: $playbackState"
                     )
                     //hide the notification
-                    notificationManager.hideNotification()
+                  //  notificationManager.hideNotification()
 
                 }
 
@@ -513,7 +513,9 @@ class AudioService : MediaBrowserServiceCompat() {
             mediaItem: com.google.android.exoplayer2.MediaItem?,
             reason: Int
         ) {
+            saveRecentSongToStorage()
             Log.i(TAG, "onMediaItemTransition: Cal")
+            Toast.makeText(applicationContext, "onMediaItemTran"+mediaItem?.mediaMetadata?.title,Toast.LENGTH_LONG).show()
 
         }
     }

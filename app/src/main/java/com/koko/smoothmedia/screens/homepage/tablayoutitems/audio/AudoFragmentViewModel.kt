@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.koko.smoothmedia.R
-import com.koko.smoothmedia.dataclass.MediaItemData
 import com.koko.smoothmedia.dataclass.Song
 import com.koko.smoothmedia.mediasession.EMPTY_PLAYBACK_STATE
 import com.koko.smoothmedia.mediasession.NOTHING_PLAYING
@@ -34,8 +33,8 @@ class AudioFragmentViewModel(
      * Use a backing property so consumers of mediaItems only get a [LiveData] instance so
      * they don't inadvertently modify it.
      */
-    private val _mediaItems = MutableLiveData<List<MediaItemData>?>()
-    val mediaItems: LiveData<List<MediaItemData>?> = _mediaItems
+    private val _mediaItems = MutableLiveData<List<Song>?>()
+    val mediaItems: LiveData<List<Song>?> = _mediaItems
     private var playbackState: PlaybackStateCompat = EMPTY_PLAYBACK_STATE
 
 
@@ -45,15 +44,22 @@ class AudioFragmentViewModel(
             Log.i(TAG, "onError: $parentId")
         }
 
+
         //this returns the list of children from the media browser service compact
         override fun onChildrenLoaded(
             parentId: String,
             children: MutableList<MediaBrowserCompat.MediaItem>
         ) {
-            Log.i(TAG, "List of Children: $children")
+            Log.i(TAG, "List of Children: ${children}")
             val lisChildren = children.map { child ->
 
                 val description = child.description
+                Log.i(
+                    TAG,
+                    "List of Album: ${description.extras!!.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)}"
+                )
+                val duration =
+                    description.extras?.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
                 Song(
                     description.mediaId!!,
                     description.mediaUri,
@@ -64,11 +70,13 @@ class AudioFragmentViewModel(
                         "Album not set"
                     ),
 
+
                     artistName = description.subtitle.toString(),
                     albumArtUri = description.iconUri,
+                    duration = duration!!
 
 
-                    )
+                )
             }
             _songsList?.postValue(lisChildren)
 
@@ -85,7 +93,7 @@ class AudioFragmentViewModel(
         playbackState = it ?: EMPTY_PLAYBACK_STATE
         val metadata = musicServiceConnection.nowPlaying.value ?: NOTHING_PLAYING
         if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
-            _mediaItems.postValue(updateState(playbackState, metadata))
+            _mediaItems.postValue(updateMetadata(metadata))
 
         }
     }
@@ -100,7 +108,7 @@ class AudioFragmentViewModel(
         val playbackState = musicServiceConnection.playbackState.value ?: EMPTY_PLAYBACK_STATE
         val metadata = it ?: NOTHING_PLAYING
         if (!metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID).isNullOrEmpty()) {
-            _mediaItems.postValue(updateState(playbackState, metadata))
+            _mediaItems.postValue(updateMetadata(metadata))
             Log.i(TAG, "mediaMetadataObserver: called")
             Log.i(
                 TAG,
@@ -182,21 +190,21 @@ class AudioFragmentViewModel(
 
     }
 
-    private fun updateState(
-        playbackState: PlaybackStateCompat,
-        mediaMetadata: MediaMetadataCompat
-    ): List<MediaItemData> {
-
-        val newResId = when (playbackState.isPlaying) {
-            true -> R.drawable.ic_pause_black_24dp
-            else -> R.drawable.ic_play_arrow_black_24dp
-        }
-
-        return mediaItems.value?.map {
-            val useResId = if (it.mediaId == mediaMetadata.id) newResId else NO_RES
-            it.copy(playbackRes = useResId)
-        } ?: emptyList()
-    }
+//    private fun updateState(
+//        playbackState: PlaybackStateCompat,
+//        mediaMetadata: MediaMetadataCompat
+//    ): List<Song> {
+//
+//        val newResId = when (playbackState.isPlaying) {
+//            true -> R.drawable.ic_pause_black_24dp
+//            else -> R.drawable.ic_play_arrow_black_24dp
+//        }
+//
+//        return mediaItems.value?.map {
+//            val useResId = if (it.id == mediaMetadata.id) newResId else NO_RES
+//            it.copy(playbackRes = useResId)
+//        } ?: emptyList()
+//    }
 
 
     //list of songs

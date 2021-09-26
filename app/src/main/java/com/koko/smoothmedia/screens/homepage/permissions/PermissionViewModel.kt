@@ -11,4 +11,7 @@ class PermissionViewModel: ViewModel() {
     fun setPermissionTrue(){
         _isPermissionGranted.value =true
     }
+    fun setPermissionFalse(){
+
+    }
 }
